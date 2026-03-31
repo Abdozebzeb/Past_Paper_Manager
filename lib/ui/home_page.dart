@@ -35,85 +35,144 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: Color(0xFF0A0F1C),
       appBar: AppBar(
-        title: Text("Past Papers"),
+        title: Text("Past Papers", style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.blueAccent,
+        elevation: 0,
       ),
-      body: Padding(
+      body: SingleChildScrollView( // Added to prevent overflow on small screens
         padding: EdgeInsets.all(20),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            dropdown("Subject", subjects, (val) {
-              setState(() {
-                subject = val;
-                series = year = type = paper = null;
-              });
-            }),
+            // --- HORIZONTAL FLOW SECTION ---
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                dropdown(
+                  label: "Subject",
+                  selectedValue: subject,
+                  items: subjects,
+                  onChanged: (val) {
+                    setState(() {
+                      subject = val;
+                      series = year = type = paper = null;
+                    });
+                  },
+                ),
 
-            if (subject != null)
-              dropdown("Series",
-                  FilterLogic.getSeries(papers, subject!), (val) {
-                setState(() {
-                  series = val;
-                  year = type = paper = null;
-                });
-              }),
+                if (subject != null)
+                  dropdown(
+                    label: "Series",
+                    selectedValue: series,
+                    items: FilterLogic.getSeries(papers, subject!),
+                    onChanged: (val) {
+                      setState(() {
+                        series = val;
+                        year = type = paper = null;
+                      });
+                    },
+                  ),
 
-            if (series != null)
-              dropdown("Year",
-                  FilterLogic.getYears(papers, subject!, series!), (val) {
-                setState(() {
-                  year = val;
-                  type = paper = null;
-                });
-              }),
+                if (series != null)
+                  dropdown(
+                    label: "Year",
+                    selectedValue: year,
+                    items: FilterLogic.getYears(papers, subject!, series!),
+                    onChanged: (val) {
+                      setState(() {
+                        year = val;
+                        type = paper = null;
+                      });
+                    },
+                  ),
 
-            if (year != null)
-              dropdown("Type",
-                  FilterLogic.getTypes(papers, subject!, series!, year!),
-                  (val) {
-                setState(() {
-                  type = val;
-                  paper = null;
-                });
-              }),
+                if (year != null)
+                  dropdown(
+                    label: "Type",
+                    selectedValue: type,
+                    items: FilterLogic.getTypes(papers, subject!, series!, year!),
+                    onChanged: (val) {
+                      setState(() {
+                        type = val;
+                        paper = null;
+                      });
+                    },
+                  ),
 
-            if (type != null && type != "gt")
-              dropdown(
-                  "Paper",
-                  FilterLogic.getPapers(
-                      papers, subject!, series!, year!, type!), (val) {
-                setState(() {
-                  paper = val;
-                });
-              }),
+                if (type != null && type != "gt")
+                  dropdown(
+                    label: "Paper",
+                    selectedValue: paper,
+                    items: FilterLogic.getPapers(papers, subject!, series!, year!, type!),
+                    onChanged: (val) {
+                      setState(() {
+                        paper = val;
+                      });
+                    },
+                  ),
+              ],
+            ),
+
+            SizedBox(height: 30),
+
+            // --- ACTION BUTTON ---
+            ElevatedButton(
+              onPressed: openFile,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blueAccent,
+                padding: EdgeInsets.symmetric(vertical: 18),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: Text("Open Paper", style: TextStyle(fontSize: 16, color: Colors.white)),
+            ),
 
             SizedBox(height: 20),
 
-            ElevatedButton(
-              onPressed: openFile,
-              child: Text("Open"),
-              
-            ),
-
+            // --- DEBUG PANEL ---
             DebugPanel(
               onRefresh: refreshFiles,
               folderPath: folderPath,
             ),
-            
           ],
         ),
       ),
     );
   }
 
-  Widget dropdown(String label, List<String> items, Function(String) onChanged) {
-    return DropdownButton<String>(
-      hint: Text(label),
-      value: null,
-      items: items
-          .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-          .toList(),
-      onChanged: (val) => onChanged(val!),
+  // REBUILT DROPDOWN: Now with selection logic and modern styling
+  Widget dropdown({
+    required String label,
+    required String? selectedValue,
+    required List<String> items,
+    required Function(String) onChanged,
+  }) {
+    // Constraints are needed inside a Wrap to give the dropdown a base width
+    return Container(
+      constraints: BoxConstraints(minWidth: 150, maxWidth: 200),
+      padding: EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: Color(0xFF121A2A),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.blueAccent.withOpacity(0.5)),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: selectedValue,
+          hint: Text(label, style: TextStyle(color: Colors.grey, fontSize: 14)),
+          dropdownColor: Color(0xFF1A2335),
+          isExpanded: true,
+          iconEnabledColor: Colors.blueAccent,
+          style: TextStyle(color: Colors.white, fontSize: 14),
+          items: items
+              .map((e) => DropdownMenuItem(
+                    value: e,
+                    child: Text(e),
+                  ))
+              .toList(),
+          onChanged: (val) => onChanged(val!),
+        ),
+      ),
     );
   }
 
@@ -121,28 +180,26 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       papers = FileScanner.scan(folderPath);
     });
-
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text("Files refreshed")),
     );
   }
 
-    void openFile() {
-      final matches = papers.where((p) =>
-          p.subject == subject &&
-          p.series == series &&
-          p.year == year &&
-          p.type == type &&
-          (type == "gt" || p.paper == paper)
-      ).toList();
+  void openFile() {
+    final matches = papers.where((p) =>
+        p.subject == subject &&
+        p.series == series &&
+        p.year == year &&
+        p.type == type &&
+        (type == "gt" || p.paper == paper)).toList();
 
-      if (matches.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("No file found. Check your selections.")),
-        );
-        return;
-      }
-
-      FileOpenService.openFile(matches.first.path);
+    if (matches.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("No file found. Check your selections.")),
+      );
+      return;
     }
+
+    FileOpenService.openFile(matches.first.path);
+  }
 }
