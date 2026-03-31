@@ -32,104 +32,112 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final subjects = FilterLogic.getSubjects(papers);
 
+    // --- LOGIC: Show button only when selection is complete ---
+    bool isSelectionComplete = false;
+    if (subject != null && series != null && year != null && type != null) {
+      if (type == "gt") {
+        isSelectionComplete = true; // Grade Threshold doesn't need a paper number
+      } else if (paper != null) {
+        isSelectionComplete = true; // Other types (qp, ms, etc.) need a paper number
+      }
+    }
+
     return Scaffold(
       backgroundColor: Color(0xFF0A0F1C),
       appBar: AppBar(
-        title: Text("Past Papers", style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.blueAccent,
+        title: Text("Past Papers", 
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)
+        ),
+        backgroundColor: Colors.transparent,
         elevation: 0,
+        centerTitle: true,
       ),
-      body: SingleChildScrollView( // Added to prevent overflow on small screens
-        padding: EdgeInsets.all(20),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // --- HORIZONTAL FLOW SECTION ---
+            // --- MODERN PILL DROPDOWNS ---
             Wrap(
-              spacing: 12,
+              spacing: 10,
               runSpacing: 12,
               children: [
-                dropdown(
+                _buildPillDropdown(
                   label: "Subject",
                   selectedValue: subject,
                   items: subjects,
-                  onChanged: (val) {
-                    setState(() {
-                      subject = val;
-                      series = year = type = paper = null;
-                    });
-                  },
+                  onChanged: (val) => setState(() {
+                    subject = val;
+                    series = year = type = paper = null;
+                  }),
                 ),
-
                 if (subject != null)
-                  dropdown(
+                  _buildPillDropdown(
                     label: "Series",
                     selectedValue: series,
                     items: FilterLogic.getSeries(papers, subject!),
-                    onChanged: (val) {
-                      setState(() {
-                        series = val;
-                        year = type = paper = null;
-                      });
-                    },
+                    onChanged: (val) => setState(() {
+                      series = val;
+                      year = type = paper = null;
+                    }),
                   ),
-
                 if (series != null)
-                  dropdown(
+                  _buildPillDropdown(
                     label: "Year",
                     selectedValue: year,
                     items: FilterLogic.getYears(papers, subject!, series!),
-                    onChanged: (val) {
-                      setState(() {
-                        year = val;
-                        type = paper = null;
-                      });
-                    },
+                    onChanged: (val) => setState(() {
+                      year = val;
+                      type = paper = null;
+                    }),
                   ),
-
                 if (year != null)
-                  dropdown(
+                  _buildPillDropdown(
                     label: "Type",
                     selectedValue: type,
                     items: FilterLogic.getTypes(papers, subject!, series!, year!),
-                    onChanged: (val) {
-                      setState(() {
-                        type = val;
-                        paper = null;
-                      });
-                    },
+                    onChanged: (val) => setState(() {
+                      type = val;
+                      paper = null;
+                    }),
                   ),
-
                 if (type != null && type != "gt")
-                  dropdown(
+                  _buildPillDropdown(
                     label: "Paper",
                     selectedValue: paper,
                     items: FilterLogic.getPapers(papers, subject!, series!, year!, type!),
-                    onChanged: (val) {
-                      setState(() {
-                        paper = val;
-                      });
-                    },
+                    onChanged: (val) => setState(() {
+                      paper = val;
+                    }),
                   ),
               ],
             ),
 
-            SizedBox(height: 30),
-
-            // --- ACTION BUTTON ---
-            ElevatedButton(
-              onPressed: openFile,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blueAccent,
-                padding: EdgeInsets.symmetric(vertical: 18),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            // --- CONDITIONAL OPEN BUTTON ---
+            if (isSelectionComplete) ...[
+              SizedBox(height: 30),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: openFile,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blueAccent,
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                    elevation: 8,
+                    shadowColor: Colors.blueAccent.withOpacity(0.4),
+                  ),
+                  child: Text("Open Paper", 
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)
+                  ),
+                ),
               ),
-              child: Text("Open Paper", style: TextStyle(fontSize: 16, color: Colors.white)),
-            ),
+            ],
 
-            SizedBox(height: 20),
-
-            // --- DEBUG PANEL ---
+            SizedBox(height: 40),
+            
+            // --- DEBUG SECTION ---
             DebugPanel(
               onRefresh: refreshFiles,
               folderPath: folderPath,
@@ -140,36 +148,30 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // REBUILT DROPDOWN: Now with selection logic and modern styling
-  Widget dropdown({
+  // REBUILT: Slim, Pill-shaped Dropdown
+  Widget _buildPillDropdown({
     required String label,
     required String? selectedValue,
     required List<String> items,
     required Function(String) onChanged,
   }) {
-    // Constraints are needed inside a Wrap to give the dropdown a base width
     return Container(
-      constraints: BoxConstraints(minWidth: 150, maxWidth: 200),
-      padding: EdgeInsets.symmetric(horizontal: 12),
+      constraints: BoxConstraints(minWidth: 100, maxWidth: 160),
+      padding: EdgeInsets.symmetric(horizontal: 14),
       decoration: BoxDecoration(
-        color: Color(0xFF121A2A),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blueAccent.withOpacity(0.5)),
+        color: Color(0xFF161D2D), // Subtle contrast from background
+        borderRadius: BorderRadius.circular(30), // Rounded pill shape
+        border: Border.all(color: Colors.blueAccent.withOpacity(0.4), width: 1),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: selectedValue,
-          hint: Text(label, style: TextStyle(color: Colors.grey, fontSize: 14)),
+          hint: Text(label, style: TextStyle(color: Colors.grey, fontSize: 13)),
           dropdownColor: Color(0xFF1A2335),
           isExpanded: true,
-          iconEnabledColor: Colors.blueAccent,
-          style: TextStyle(color: Colors.white, fontSize: 14),
-          items: items
-              .map((e) => DropdownMenuItem(
-                    value: e,
-                    child: Text(e),
-                  ))
-              .toList(),
+          icon: Icon(Icons.expand_more, color: Colors.blueAccent, size: 20),
+          style: TextStyle(color: Colors.white, fontSize: 13),
+          items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
           onChanged: (val) => onChanged(val!),
         ),
       ),
