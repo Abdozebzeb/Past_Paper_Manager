@@ -163,7 +163,7 @@ class _HomePageState extends State<HomePage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              "Created by Abdullah Zeb",
+              "Created with ❤️ by Abdullah Zeb",
               style: TextStyle(color: Colors.grey.withOpacity(0.7), fontSize: 12),
             ),
             SizedBox(height: 8),
