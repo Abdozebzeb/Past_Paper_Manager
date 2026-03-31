@@ -74,6 +74,8 @@ class _HomePageState extends State<HomePage> {
             Wrap(
               spacing: 10,
               runSpacing: 12,
+              alignment: WrapAlignment.center, 
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 _buildPillDropdown(
                   label: "Subject",
@@ -148,10 +150,10 @@ class _HomePageState extends State<HomePage> {
 
             SizedBox(height: 40),
             
-            // DebugPanel(
-              // onRefresh: refreshFiles,
-              // folderPath: folderPath,
-            // ),
+            DebugPanel(
+              onRefresh: refreshFiles,
+              folderPath: folderPath,
+            ),
           ],
         ),
       ),
@@ -160,6 +162,7 @@ class _HomePageState extends State<HomePage> {
       bottomNavigationBar: Container(
         padding: EdgeInsets.only(bottom: 20, top: 10),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(

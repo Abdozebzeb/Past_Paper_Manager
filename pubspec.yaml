@@ -27,6 +27,15 @@ environment:
 # dependencies can be manually updated by changing the version numbers below to
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
+
+msix_config:
+  display_name: My Awesome App
+  publisher_display_name: Abdullah Zeb
+  identity_name: com.abdullahzeb.cieapp
+  msix_version: 1.0.0.0
+  logo_path: assets/logo.png
+  # build_windows: false
+
 dependencies:
   flutter:
     sdk: flutter
@@ -49,6 +58,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  msix: ^3.16.13
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

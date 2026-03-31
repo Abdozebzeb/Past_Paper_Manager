@@ -24,7 +24,7 @@ class DebugPanel extends StatelessWidget {
       child: Column(
         children: [
           Text(
-            "Debug Panel",
+            "Add Your Files",
             style: TextStyle(color: Colors.blueAccent),
           ),
 
@@ -42,7 +42,7 @@ class DebugPanel extends StatelessWidget {
                 onPressed: () {
                   FolderService.openFolder(folderPath);
                 },
-                child: Text("Open Folder"),
+                child: Text("Open Folder to Add Files"),
               ),
             ],
           )
