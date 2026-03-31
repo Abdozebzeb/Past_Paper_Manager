@@ -2,13 +2,12 @@ import 'package:flutter/material.dart';
 import 'ui/home_page.dart';
 import 'logic/app_state.dart';
 import 'services/folder_service.dart';
-
 void main() {
   runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  final String folderPath = "assets/PastPapers";
+  
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +22,7 @@ class MyApp extends StatelessWidget {
           if (!snapshot.hasData) return SizedBox();
 
           if (snapshot.data == true) {
-            return FirstRunScreen(folderPath);
+            return FirstRunScreen(FolderService.getPastPapersPath());
           }
 
           return HomePage();
@@ -36,7 +35,7 @@ class MyApp extends StatelessWidget {
 class FirstRunScreen extends StatelessWidget {
   final String folderPath;
 
-  FirstRunScreen(this.folderPath);
+  const FirstRunScreen(this.folderPath, {Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -55,6 +54,9 @@ class FirstRunScreen extends StatelessWidget {
             TextButton(
               onPressed: () async {
                 await AppState.setNotFirstRun();
+
+                if (!context.mounted) return;
+
                 Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(builder: (_) => HomePage()));

@@ -3,6 +3,8 @@ import '../logic/file_scanner.dart';
 import '../logic/filter_logic.dart';
 import '../logic/paper_model.dart';
 import '../services/file_open_service.dart';
+import '../services/folder_service.dart';
+import 'debug.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -11,6 +13,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   List<Paper> papers = [];
+  late String folderPath;
 
   String? subject;
   String? series;
@@ -21,7 +24,8 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    papers = FileScanner.scan("assets/PastPapers");
+    folderPath = FolderService.getPastPapersPath();
+    papers = FileScanner.scan(folderPath);
   }
 
   @override
@@ -88,7 +92,14 @@ class _HomePageState extends State<HomePage> {
             ElevatedButton(
               onPressed: openFile,
               child: Text("Open"),
-            )
+              
+            ),
+
+            DebugPanel(
+              onRefresh: refreshFiles,
+              folderPath: folderPath,
+            ),
+            
           ],
         ),
       ),
@@ -103,6 +114,16 @@ class _HomePageState extends State<HomePage> {
           .map((e) => DropdownMenuItem(value: e, child: Text(e)))
           .toList(),
       onChanged: (val) => onChanged(val!),
+    );
+  }
+
+  void refreshFiles() {
+    setState(() {
+      papers = FileScanner.scan(folderPath);
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Files refreshed")),
     );
   }
 
