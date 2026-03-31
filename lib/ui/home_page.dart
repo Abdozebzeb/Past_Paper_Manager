@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+// import 'package:url_launcher/url_launcher.dart'; // You'll need this package for the links
 import '../logic/file_scanner.dart';
 import '../logic/filter_logic.dart';
 import '../logic/paper_model.dart';
 import '../services/file_open_service.dart';
 import '../services/folder_service.dart';
 import 'debug.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+
 
 class HomePage extends StatefulWidget {
   @override
@@ -28,17 +32,27 @@ class _HomePageState extends State<HomePage> {
     papers = FileScanner.scan(folderPath);
   }
 
+  // --- Placeholder for your links ---
+  void _launchURL(String url) async {
+  final uri = Uri.parse(url);
+
+  if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Could not open link")),
+    );
+  }
+}
+
   @override
   Widget build(BuildContext context) {
     final subjects = FilterLogic.getSubjects(papers);
 
-    // --- LOGIC: Show button only when selection is complete ---
     bool isSelectionComplete = false;
     if (subject != null && series != null && year != null && type != null) {
       if (type == "gt") {
-        isSelectionComplete = true; // Grade Threshold doesn't need a paper number
+        isSelectionComplete = true;
       } else if (paper != null) {
-        isSelectionComplete = true; // Other types (qp, ms, etc.) need a paper number
+        isSelectionComplete = true;
       }
     }
 
@@ -57,7 +71,6 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // --- MODERN PILL DROPDOWNS ---
             Wrap(
               spacing: 10,
               runSpacing: 12,
@@ -113,7 +126,6 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
 
-            // --- CONDITIONAL OPEN BUTTON ---
             if (isSelectionComplete) ...[
               SizedBox(height: 30),
               SizedBox(
@@ -126,7 +138,6 @@ class _HomePageState extends State<HomePage> {
                     padding: EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                     elevation: 8,
-                    shadowColor: Colors.blueAccent.withOpacity(0.4),
                   ),
                   child: Text("Open Paper", 
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)
@@ -137,10 +148,48 @@ class _HomePageState extends State<HomePage> {
 
             SizedBox(height: 40),
             
-            // --- DEBUG SECTION ---
-            DebugPanel(
-              onRefresh: refreshFiles,
-              folderPath: folderPath,
+            // DebugPanel(
+              // onRefresh: refreshFiles,
+              // folderPath: folderPath,
+            // ),
+          ],
+        ),
+      ),
+
+      // --- ADDED FOOTER SECTION ---
+      bottomNavigationBar: Container(
+        padding: EdgeInsets.only(bottom: 20, top: 10),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              "Created by Abdullah Zeb",
+              style: TextStyle(color: Colors.grey.withOpacity(0.7), fontSize: 12),
+            ),
+            SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton(
+                  icon: FaIcon(
+                    FontAwesomeIcons.github,
+                    color: Colors.white.withOpacity(0.8),
+                    size: 18,
+                  ),
+                  onPressed: () => _launchURL("https://github.com/yourusername"),
+                  tooltip: "GitHub",
+                ),
+
+                IconButton(
+                  icon: FaIcon(
+                    FontAwesomeIcons.instagram,
+                    color: Colors.white.withOpacity(0.8),
+                    size: 18,
+                  ),
+                  onPressed: () => _launchURL("https://instagram.com/yourusername"),
+                  tooltip: "Instagram",
+                ),
+              ],
             ),
           ],
         ),
@@ -148,7 +197,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // REBUILT: Slim, Pill-shaped Dropdown
   Widget _buildPillDropdown({
     required String label,
     required String? selectedValue,
@@ -159,8 +207,8 @@ class _HomePageState extends State<HomePage> {
       constraints: BoxConstraints(minWidth: 100, maxWidth: 160),
       padding: EdgeInsets.symmetric(horizontal: 14),
       decoration: BoxDecoration(
-        color: Color(0xFF161D2D), // Subtle contrast from background
-        borderRadius: BorderRadius.circular(30), // Rounded pill shape
+        color: Color(0xFF161D2D),
+        borderRadius: BorderRadius.circular(30),
         border: Border.all(color: Colors.blueAccent.withOpacity(0.4), width: 1),
       ),
       child: DropdownButtonHideUnderline(
