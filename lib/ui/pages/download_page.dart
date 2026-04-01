@@ -10,11 +10,11 @@ class DownloadPage extends StatefulWidget {
 }
 
 class _DownloadPageState extends State<DownloadPage> with AutomaticKeepAliveClientMixin {
-  // Static variables persist even when the widget is destroyed/rebuilt during tab switches
-  static double _staticProgress = 0;
-  static List<String> _staticSuccess = [];
-  static List<String> _staticFailed = [];
-  static bool _staticIsDownloading = false;
+  // Global-style Notifiers that stay alive in memory
+  static final ValueNotifier<double> _progressNotifier = ValueNotifier(0);
+  static final ValueNotifier<bool> _isDownloadingNotifier = ValueNotifier(false);
+  static final List<String> _staticSuccess = [];
+  static final List<String> _staticFailed = [];
 
   final subjectController = TextEditingController();
   final startYearController = TextEditingController();
@@ -26,6 +26,26 @@ class _DownloadPageState extends State<DownloadPage> with AutomaticKeepAliveClie
 
   @override
   bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+    // Listen to the broadcast even if we switch tabs and come back
+    _progressNotifier.addListener(_rebuild);
+    _isDownloadingNotifier.addListener(_rebuild);
+  }
+
+  @override
+  void dispose() {
+    // Clean up listeners to prevent memory leaks
+    _progressNotifier.removeListener(_rebuild);
+    _isDownloadingNotifier.removeListener(_rebuild);
+    super.dispose();
+  }
+
+  void _rebuild() {
+    if (mounted) setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -87,14 +107,19 @@ class _DownloadPageState extends State<DownloadPage> with AutomaticKeepAliveClie
                   SizedBox(
                     width: double.infinity,
                     height: 45,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blueAccent,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      ),
-                      onPressed: _staticIsDownloading ? null : startDownload,
-                      child: Text(_staticIsDownloading ? "Downloading..." : "Start Download", 
-                        style: const TextStyle(color: Colors.white)),
+                    child: ValueListenableBuilder<bool>(
+                      valueListenable: _isDownloadingNotifier,
+                      builder: (context, isDownloading, child) {
+                        return ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blueAccent,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          onPressed: isDownloading ? null : startDownload,
+                          child: Text(isDownloading ? "Downloading..." : "Start Download", 
+                            style: const TextStyle(color: Colors.white)),
+                        );
+                      },
                     ),
                   ),
                 ],
@@ -113,18 +138,27 @@ class _DownloadPageState extends State<DownloadPage> with AutomaticKeepAliveClie
                     child: Column(
                       children: [
                         const SizedBox(height: 10),
-                        LinearProgressIndicator(
-                          backgroundColor: Colors.white10,
-                          value: _staticProgress,
-                          color: _staticProgress >= 1.0 ? Colors.green : Colors.blueAccent,
-                          minHeight: 8,
+                        ValueListenableBuilder<double>(
+                          valueListenable: _progressNotifier,
+                          builder: (context, progress, child) {
+                            return Column(
+                              children: [
+                                LinearProgressIndicator(
+                                  backgroundColor: Colors.white10,
+                                  value: progress,
+                                  color: progress >= 1.0 ? Colors.green : Colors.blueAccent,
+                                  minHeight: 8,
+                                ),
+                                const SizedBox(height: 10),
+                                Text("${(progress * 100).toStringAsFixed(0)}%", 
+                                  style: TextStyle(
+                                    color: progress >= 1.0 ? Colors.green : Colors.white, 
+                                    fontWeight: FontWeight.bold
+                                  )),
+                              ],
+                            );
+                          },
                         ),
-                        const SizedBox(height: 10),
-                        Text("${(_staticProgress * 100).toStringAsFixed(0)}%", 
-                          style: TextStyle(
-                            color: _staticProgress >= 1.0 ? Colors.green : Colors.white, 
-                            fontWeight: FontWeight.bold
-                          )),
                       ],
                     ),
                   ),
@@ -167,6 +201,7 @@ class _DownloadPageState extends State<DownloadPage> with AutomaticKeepAliveClie
     );
   }
 
+  // --- UI HELPERS ---
   Widget _sectionCard({required String title, required Widget child}) {
     return Container(
       padding: const EdgeInsets.all(15),
@@ -212,13 +247,13 @@ class _DownloadPageState extends State<DownloadPage> with AutomaticKeepAliveClie
     );
   }
 
+  // --- LOGIC ---
   void startDownload() async {
-    setState(() {
-      _staticIsDownloading = true;
-      _staticProgress = 0;
-      _staticSuccess.clear();
-      _staticFailed.clear();
-    });
+    _isDownloadingNotifier.value = true;
+    _progressNotifier.value = 0;
+    _staticSuccess.clear();
+    _staticFailed.clear();
+    setState(() {}); // Clear local UI lists
 
     try {
       final subject = subjectController.text.trim();
@@ -228,7 +263,6 @@ class _DownloadPageState extends State<DownloadPage> with AutomaticKeepAliveClie
       final variants = variantsController.text.split(',').map((e) => e.trim()).toList();
       final selectedTypes = types.entries.where((e) => e.value).map((e) => e.key).toList();
 
-      // We call the downloader but don't strictly tie the loop to this widget instance
       await Downloader.downloadPapers(
         subject: subject,
         startYear: startYear,
@@ -236,10 +270,7 @@ class _DownloadPageState extends State<DownloadPage> with AutomaticKeepAliveClie
         papers: papers,
         variants: variants,
         types: selectedTypes,
-        onProgress: (p) {
-          _staticProgress = p;
-          if (mounted) setState(() {});
-        },
+        onProgress: (p) => _progressNotifier.value = p,
         onSuccess: (file) {
           _staticSuccess.add(file);
           if (mounted) setState(() {});
@@ -255,7 +286,6 @@ class _DownloadPageState extends State<DownloadPage> with AutomaticKeepAliveClie
       }
     }
 
-    _staticIsDownloading = false;
-    if (mounted) setState(() {});
+    _isDownloadingNotifier.value = false;
   }
 }
