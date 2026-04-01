@@ -9,11 +9,12 @@ class DownloadPage extends StatefulWidget {
   State<DownloadPage> createState() => _DownloadPageState();
 }
 
-class _DownloadPageState extends State<DownloadPage> {
-  double progress = 0;
-  List<String> success = [];
-  List<String> failed = [];
-  bool isDownloading = false;
+class _DownloadPageState extends State<DownloadPage> with AutomaticKeepAliveClientMixin {
+  // Static variables persist even when the widget is destroyed/rebuilt during tab switches
+  static double _staticProgress = 0;
+  static List<String> _staticSuccess = [];
+  static List<String> _staticFailed = [];
+  static bool _staticIsDownloading = false;
 
   final subjectController = TextEditingController();
   final startYearController = TextEditingController();
@@ -21,11 +22,15 @@ class _DownloadPageState extends State<DownloadPage> {
   final papersController = TextEditingController();
   final variantsController = TextEditingController();
 
-  // Track checkbox states
   Map<String, bool> types = {"qp": true, "ms": false, "gt": false};
 
   @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
+
     return Scaffold(
       backgroundColor: const Color(0xFF0A0F1C),
       appBar: AppBar(
@@ -37,7 +42,6 @@ class _DownloadPageState extends State<DownloadPage> {
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            // ================= INPUT SECTION (HORIZONTAL) =================
             _sectionCard(
               title: "Download Setup",
               child: Column(
@@ -60,8 +64,6 @@ class _DownloadPageState extends State<DownloadPage> {
                     ],
                   ),
                   const SizedBox(height: 15),
-                  
-                  // Horizontal Checkboxes
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: types.keys.map((String key) {
@@ -81,7 +83,6 @@ class _DownloadPageState extends State<DownloadPage> {
                       );
                     }).toList(),
                   ),
-                  
                   const SizedBox(height: 15),
                   SizedBox(
                     width: double.infinity,
@@ -91,8 +92,9 @@ class _DownloadPageState extends State<DownloadPage> {
                         backgroundColor: Colors.blueAccent,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       ),
-                      onPressed: isDownloading ? null : startDownload,
-                      child: const Text("Start Download", style: TextStyle(color: Colors.white)),
+                      onPressed: _staticIsDownloading ? null : startDownload,
+                      child: Text(_staticIsDownloading ? "Downloading..." : "Start Download", 
+                        style: const TextStyle(color: Colors.white)),
                     ),
                   ),
                 ],
@@ -101,7 +103,6 @@ class _DownloadPageState extends State<DownloadPage> {
 
             const SizedBox(height: 20),
 
-            // ================= PROGRESS & RESULTS (SIDE BY SIDE) =================
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -113,14 +114,17 @@ class _DownloadPageState extends State<DownloadPage> {
                       children: [
                         const SizedBox(height: 10),
                         LinearProgressIndicator(
-                          value: progress,
                           backgroundColor: Colors.white10,
-                          color: Colors.blueAccent,
+                          value: _staticProgress,
+                          color: _staticProgress >= 1.0 ? Colors.green : Colors.blueAccent,
                           minHeight: 8,
                         ),
                         const SizedBox(height: 10),
-                        Text("${(progress * 100).toStringAsFixed(0)}%", 
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                        Text("${(_staticProgress * 100).toStringAsFixed(0)}%", 
+                          style: TextStyle(
+                            color: _staticProgress >= 1.0 ? Colors.green : Colors.white, 
+                            fontWeight: FontWeight.bold
+                          )),
                       ],
                     ),
                   ),
@@ -134,15 +138,15 @@ class _DownloadPageState extends State<DownloadPage> {
                       iconColor: Colors.blueAccent,
                       collapsedIconColor: Colors.white,
                       title: Text(
-                        "Success: ${success.length} | Failed: ${failed.length}",
+                        "Success: ${_staticSuccess.length} | Failed: ${_staticFailed.length}",
                         style: const TextStyle(color: Colors.white, fontSize: 14),
                       ),
                       children: [
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            _copyButton("Copy Failed", failed),
-                            _copyButton("Copy Success", success),
+                            _copyButton("Copy Failed", _staticFailed),
+                            _copyButton("Copy Success", _staticSuccess),
                           ],
                         ),
                       ],
@@ -163,8 +167,6 @@ class _DownloadPageState extends State<DownloadPage> {
     );
   }
 
-  // ================= UI HELPERS =================
-
   Widget _sectionCard({required String title, required Widget child}) {
     return Container(
       padding: const EdgeInsets.all(15),
@@ -176,9 +178,7 @@ class _DownloadPageState extends State<DownloadPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title,
-              style: const TextStyle(
-                  color: Colors.blueAccent, fontWeight: FontWeight.bold)),
+          Text(title, style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold)),
           const SizedBox(height: 10),
           child,
         ],
@@ -196,10 +196,7 @@ class _DownloadPageState extends State<DownloadPage> {
         filled: true,
         fillColor: const Color(0xFF1A2335),
         isDense: true,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide.none,
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
       ),
     );
   }
@@ -209,72 +206,56 @@ class _DownloadPageState extends State<DownloadPage> {
       onPressed: () {
         if (data.isEmpty) return;
         Clipboard.setData(ClipboardData(text: data.join("\n")));
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("$label copied")),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("$label copied")));
       },
       child: Text(label, style: const TextStyle(color: Colors.blueAccent)),
     );
   }
 
-  // ================= LOGIC =================
+  void startDownload() async {
+    setState(() {
+      _staticIsDownloading = true;
+      _staticProgress = 0;
+      _staticSuccess.clear();
+      _staticFailed.clear();
+    });
 
-      void startDownload() async {
-        setState(() {
-          isDownloading = true;
-          progress = 0;
-          success.clear();
-          failed.clear();
-        });
+    try {
+      final subject = subjectController.text.trim();
+      final startYear = int.parse(startYearController.text.trim());
+      final endYear = int.parse(endYearController.text.trim());
+      final papers = papersController.text.split(',').map((e) => e.trim()).toList();
+      final variants = variantsController.text.split(',').map((e) => e.trim()).toList();
+      final selectedTypes = types.entries.where((e) => e.value).map((e) => e.key).toList();
 
-        try {
-          final subject = subjectController.text.trim();
-          final startYear = int.parse(startYearController.text.trim());
-          final endYear = int.parse(endYearController.text.trim());
-
-          final papers = papersController.text.split(',').map((e) => e.trim()).toList();
-          final variants = variantsController.text.split(',').map((e) => e.trim()).toList();
-
-          final selectedTypes = types.entries
-              .where((e) => e.value)
-              .map((e) => e.key)
-              .toList();
-
-          await Downloader.downloadPapers(
-            subject: subject,
-            startYear: startYear,
-            endYear: endYear,
-            papers: papers,
-            variants: variants,
-            types: selectedTypes,
-
-            onProgress: (p) {
-              setState(() {
-                progress = p;
-              });
-            },
-
-            onSuccess: (file) {
-              setState(() {
-                success.add(file);
-              });
-            },
-
-            onFail: (file) {
-              setState(() {
-                failed.add(file);
-              });
-            },
-          );
-        } catch (e) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Invalid input")),
-          );
-        }
-
-        setState(() {
-          isDownloading = false;
-        });
+      // We call the downloader but don't strictly tie the loop to this widget instance
+      await Downloader.downloadPapers(
+        subject: subject,
+        startYear: startYear,
+        endYear: endYear,
+        papers: papers,
+        variants: variants,
+        types: selectedTypes,
+        onProgress: (p) {
+          _staticProgress = p;
+          if (mounted) setState(() {});
+        },
+        onSuccess: (file) {
+          _staticSuccess.add(file);
+          if (mounted) setState(() {});
+        },
+        onFail: (file) {
+          _staticFailed.add(file);
+          if (mounted) setState(() {});
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Invalid input")));
       }
-  
+    }
+
+    _staticIsDownloading = false;
+    if (mounted) setState(() {});
+  }
 }
