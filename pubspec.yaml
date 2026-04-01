@@ -1,5 +1,5 @@
 name: cie_desktop_app
-description: "A new Flutter project."
+description: "An Easy To use Past Paper App for Students"
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -29,13 +29,17 @@ environment:
 # versions available, run `flutter pub outdated`.
 
 msix_config:
-  display_name: My Awesome App
+  display_name: Past Paper Manager
   publisher_display_name: Abdullah Zeb
-  identity_name: com.abdullahzeb.cieapp
+  identity_name: com.abdullahzeb.ppm
   msix_version: 1.0.0.0
   logo_path: assets/logo.png
   # build_windows: false
-
+flutter_launcher_icons:
+  windows:
+    generate: true
+    image_path: "assets/icon.png" # Path to your source logo
+    icon_size: 48 # Standard size
 dependencies:
   flutter:
     sdk: flutter
@@ -49,6 +53,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   font_awesome_flutter: ^11.0.0
   file_picker: ^10.3.10
+  rename_app: ^1.6.5
 
 dev_dependencies:
   flutter_test:
@@ -61,6 +66,7 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
   msix: ^3.16.13
+  flutter_launcher_icons: ^0.14.4
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -74,6 +80,7 @@ flutter:
   assets:
     - shorebird.yaml
   uses-material-design: true
+
 
   # To add assets to your application, add an assets section, like this:
   # assets:

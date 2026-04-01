@@ -130,18 +130,18 @@ class _ImportExportPageState extends State<ImportExportPage> {
             
             const SizedBox(height: 40),
             
-            Text(
-              "Internal Path: ${FolderService.getPastPapersPath()}",
-              style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 10),
-              textAlign: TextAlign.center,
-            ),
+            // Text(
+            //   "Internal Path: ${FolderService.getPastPapersPath()}",
+            //   style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 10),
+            //   textAlign: TextAlign.center,
+            // ),
 
             // ADDED FOOTER HERE
             const SizedBox(height: 60),
-            const Text(
-              "Created with ❤️ for Students By Abdullah Zeb",
-              style: TextStyle(color: Colors.grey, fontSize: 12),
-            )
+            // const Text(
+            //   "Created with ❤️ for Students By Abdullah Zeb",
+            //   style: TextStyle(color: Colors.grey, fontSize: 12),
+            // )
           ],
         ),
       ),
