@@ -8,6 +8,7 @@ import '../../services/folder_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'dart:io';
+import '../../services/analytics_service.dart'; // Import the AnalyticsService
 
 class ViewPapersPage extends StatefulWidget {
   const ViewPapersPage({Key? key}) : super(key: key);
@@ -327,7 +328,7 @@ class _ViewPapersPageState extends State<ViewPapersPage> {
     );
   }
 
-  void openFile() {
+  Future<void> openFile() async {
     final matches = papers.where((p) =>
         p.subject == subject &&
         p.series == series &&
@@ -340,5 +341,15 @@ class _ViewPapersPageState extends State<ViewPapersPage> {
       return;
     }
     FileOpenService.openFile(matches.first.path);
+
+
+    // Inside your openFile() async method:
+    final service = AnalyticsService();
+    String? userId = await service.getStoredUserId();
+
+    if (userId != null) {
+      await service.logButtonClick("open_paper_button", userId);
+    }
+    
   }
 }
