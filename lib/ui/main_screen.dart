@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'widgets/sidebar.dart';
 import 'pages/view_papers_page.dart';
+import 'pages/download_page.dart';
+import 'pages/about_page.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({Key? key}) : super(key: key);
@@ -15,9 +17,9 @@ class _MainScreenState extends State<MainScreen> {
   // This list holds the different screens
   final List<Widget> _pages = [
     const ViewPapersPage(), // Your original filter screen
-    const Center(child: Text("Downloader Coming Soon", style: TextStyle(color: Colors.white))),
+    const DownloadPage(),
     const Center(child: Text("Import/Export Coming Soon", style: TextStyle(color: Colors.white))),
-    const Center(child: Text("About Page Coming Soon", style: TextStyle(color: Colors.white))),
+    const AboutPage(),
   ];
 
   @override
