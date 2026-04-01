@@ -3,6 +3,7 @@ import 'widgets/sidebar.dart';
 import 'pages/view_papers_page.dart';
 import 'pages/download_page.dart';
 import 'pages/about_page.dart';
+import 'pages/import_export_page.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({Key? key}) : super(key: key);
@@ -18,7 +19,7 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _pages = [
     const ViewPapersPage(), // Your original filter screen
     const DownloadPage(),
-    const Center(child: Text("Import/Export Coming Soon", style: TextStyle(color: Colors.white))),
+    const ImportExportPage(),
     const AboutPage(),
   ];
 

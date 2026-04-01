@@ -41,11 +41,11 @@ class AboutPage extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    const CircleAvatar(
-                      radius: 40,
-                      backgroundColor: Colors.blueAccent,
-                      child: Icon(Icons.person, size: 50, color: Colors.white),
-                    ),
+                    // const CircleAvatar(
+                    //   radius: 40,
+                    //   backgroundColor: Colors.blueAccent,
+                    //   child: Icon(Icons.person, size: 50, color: Colors.white),
+                    // ),
                     const SizedBox(height: 15),
                     const Text(
                       "Abdullah Zeb",
@@ -56,7 +56,7 @@ class AboutPage extends StatelessWidget {
                       ),
                     ),
                     const Text(
-                      "Developer & Student",
+                      "Yapper & Student",
                       style: TextStyle(color: Colors.grey),
                     ),
                     const Divider(height: 30, color: Colors.white10),
@@ -88,14 +88,14 @@ class AboutPage extends StatelessWidget {
                   // GitHub Button
                   IconButton(
                     icon: const FaIcon(FontAwesomeIcons.github, color: Colors.white70, size: 28),
-                    onPressed: () => _launchURL(context, "https://github.com/yourusername"),
+                    onPressed: () => _launchURL(context, "https://github.com/Abdozebzeb"),
                     hoverColor: Colors.blueAccent.withAlpha(25),
                   ),
                   const SizedBox(width: 20),
                   // Instagram Button
                   IconButton(
                     icon: const FaIcon(FontAwesomeIcons.instagram, color: Colors.white70, size: 28),
-                    onPressed: () => _launchURL(context, "https://instagram.com/yourusername"),
+                    onPressed: () => _launchURL(context, "https://www.instagram.com/abdullahhzeb/"),
                     hoverColor: Colors.blueAccent.withAlpha(25),
                   ),
                 ],
@@ -103,7 +103,7 @@ class AboutPage extends StatelessWidget {
 
               const SizedBox(height: 40),
               const Text(
-                "Created with ❤️ for Students",
+                "Created with ❤️ for Students By Abdullah Zeb",
                 style: TextStyle(color: Colors.grey, fontSize: 12),
               ),
             ],

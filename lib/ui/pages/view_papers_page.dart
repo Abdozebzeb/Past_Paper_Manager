@@ -150,10 +150,10 @@ class _ViewPapersPageState extends State<ViewPapersPage> {
 
             SizedBox(height: 40),
             
-            DebugPanel(
-              onRefresh: refreshFiles,
-              folderPath: folderPath,
-            ),
+            // DebugPanel(
+            //   onRefresh: refreshFiles,
+            //   folderPath: folderPath,
+            // ),
           ],
         ),
       ),
@@ -166,7 +166,7 @@ class _ViewPapersPageState extends State<ViewPapersPage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              "Created with ❤️ by Abdullah Zeb",
+              "Created with ❤️ for Students By Abdullah Zeb",
               style: TextStyle(color: Colors.grey.withOpacity(0.7), fontSize: 12),
             ),
             SizedBox(height: 8),
@@ -179,7 +179,7 @@ class _ViewPapersPageState extends State<ViewPapersPage> {
                     color: Colors.white.withOpacity(0.8),
                     size: 18,
                   ),
-                  onPressed: () => _launchURL("https://github.com/yourusername"),
+                  onPressed: () => _launchURL("https://github.com/Abdozebzeb"),
                   tooltip: "GitHub",
                 ),
 
@@ -189,7 +189,7 @@ class _ViewPapersPageState extends State<ViewPapersPage> {
                     color: Colors.white.withOpacity(0.8),
                     size: 18,
                   ),
-                  onPressed: () => _launchURL("https://instagram.com/yourusername"),
+                  onPressed: () => _launchURL("https://www.instagram.com/abdullahhzeb/"),
                   tooltip: "Instagram",
                 ),
               ],

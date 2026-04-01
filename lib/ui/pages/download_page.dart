@@ -192,7 +192,7 @@ class _DownloadPageState extends State<DownloadPage> with AutomaticKeepAliveClie
 
             const SizedBox(height: 60),
             const Text(
-              "Created with ❤️ by Abdullah Zeb",
+              "Created with ❤️ for Students By Abdullah Zeb",
               style: TextStyle(color: Colors.grey, fontSize: 12),
             )
           ],
