@@ -227,7 +227,7 @@ class _ViewPapersPageState extends State<ViewPapersPage> {
                     child: Column(
                       children: [
                         Text(
-                          "Created with ❤️ for Students By Abdullah Zeb",
+                          "Created with ❤️ for Students, By Abdullah Zeb",
                           style: TextStyle(color: Colors.grey.withOpacity(0.7), fontSize: 12),
                         ),
                         const SizedBox(height: 8),

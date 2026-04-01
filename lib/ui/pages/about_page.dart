@@ -61,9 +61,12 @@ class AboutPage extends StatelessWidget {
                     ),
                     const Divider(height: 30, color: Colors.white10),
                     
-                    _infoRow("App Version", "1.0.0"),
+                    _infoRow("App Version", "1.0.1"),
+                    _infoRow("Version Release Date", "4/1/2026"),
                     _infoRow("Build Type", "Release (Windows)"),
-                    _infoRow("Latest Patch", "Patch 1"),
+                    _infoRow("Latest Patch", "Patch #1"),
+                    _infoRow("Patch Release Date", "4/1/2026"),
+
                     
                     const SizedBox(height: 20),
                     const Text(
@@ -103,7 +106,7 @@ class AboutPage extends StatelessWidget {
 
               const SizedBox(height: 40),
               const Text(
-                "Created with ❤️ for Students By Abdullah Zeb",
+                "Created with ❤️ for Students, By Abdullah Zeb",
                 style: TextStyle(color: Colors.grey, fontSize: 12),
               ),
             ],
