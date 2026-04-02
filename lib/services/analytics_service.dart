@@ -13,29 +13,39 @@ class AnalyticsService {
   }
 
   Future<void> initializeUser() async {
-    final prefs = await SharedPreferences.getInstance();
-    String? storedId = prefs.getString('user_id');
+  final prefs = await SharedPreferences.getInstance();
+  String? storedId = prefs.getString('user_id');
 
-    String windowsUser = Platform.environment['USERNAME'] ?? "Unknown_User";
-    String deviceName = Platform.localHostname;
+  String windowsUser = Platform.environment['USERNAME'] ?? "Unknown_User";
+  String deviceName = Platform.localHostname;
 
-    // Use existing ID or create new one
-    String idToUse = storedId ?? "${windowsUser}_${DateTime.now().millisecondsSinceEpoch}";
-    
-    if (storedId == null) {
-      await prefs.setString('user_id', idToUse);
-    }
+  // 1. Determine the ID
+  String idToUse = storedId ?? "${windowsUser}_${DateTime.now().millisecondsSinceEpoch}";
+  if (storedId == null) await prefs.setString('user_id', idToUse);
 
-    // UPDATED: Use .set with merge: true to ensure the document exists
-    await _db.collection('users').doc(idToUse).set({
+  final userDocRef = _db.collection('users').doc(idToUse);
+  final docSnapshot = await userDocRef.get();
+
+  if (!docSnapshot.exists) {
+    // FIRST TIME EVER (Document doesn't exist in Firestore)
+    await userDocRef.set({
       'whoami': windowsUser,
       'device': deviceName,
+      'createdAt': FieldValue.serverTimestamp(), // Set ONLY now
+      'lastSeen': FieldValue.serverTimestamp(),
+      'appOpens': 1,
+      'totalFilesDownloaded': 0,
+      'buttonClicks': {},
+    });
+  } else {
+    // RETURNING USER (Document exists)
+    await userDocRef.update({
       'lastSeen': FieldValue.serverTimestamp(),
       'appOpens': FieldValue.increment(1),
-      // createdAt is only set if the document doesn't exist yet
-      'createdAt': FieldValue.serverTimestamp(), 
-    }, SetOptions(merge: true));
+      // Notice: 'createdAt' is NOT included here, so it stays original
+    });
   }
+}
 
   // UPDATED: Set with merge prevents "Document Not Found" exceptions
   Future<void> logBatchDownloads(String userId, int count) async {
