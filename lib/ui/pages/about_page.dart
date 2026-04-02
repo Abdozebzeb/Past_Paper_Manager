@@ -61,10 +61,10 @@ class AboutPage extends StatelessWidget {
                     ),
                     const Divider(height: 30, color: Colors.white10),
                     
-                    _infoRow("App Version", "1.0.2"),
+                    _infoRow("App Version", "1.0.3"),
                     _infoRow("Version Release Date", "1/4/2026"),
                     _infoRow("Build Type", "Release (Windows)"),
-                    _infoRow("Latest Patch", "Patch #3"),
+                    _infoRow("Latest Patch", "Patch #0"),
                     _infoRow("Patch Release Date", "2/4/2026"),
 
                     
