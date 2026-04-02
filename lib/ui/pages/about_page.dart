@@ -64,7 +64,7 @@ class AboutPage extends StatelessWidget {
                     _infoRow("App Version", "1.0.2"),
                     _infoRow("Version Release Date", "1/4/2026"),
                     _infoRow("Build Type", "Release (Windows)"),
-                    _infoRow("Latest Patch", "Patch #2"),
+                    _infoRow("Latest Patch", "Patch #3"),
                     _infoRow("Patch Release Date", "2/4/2026"),
 
                     
