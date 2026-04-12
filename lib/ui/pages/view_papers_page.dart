@@ -68,23 +68,28 @@ class _ViewPapersPageState extends State<ViewPapersPage> {
     String? userId = await service.getStoredUserId();
     if (userId != null) {
       await service.logButtonClick("quick_action_$targetType", userId);
-    }
 
-    final matches = papers
-        .where(
-          (p) =>
-              p.subject == subject &&
-              p.series == series &&
-              p.year == year &&
-              p.type == targetType &&
-              (targetType == "gt" || p.paper == paper),
-        )
-        .toList();
+      final matches = papers
+          .where(
+            (p) =>
+                p.subject == subject &&
+                p.series == series &&
+                p.year == year &&
+                p.type == targetType &&
+                (targetType == "gt" || p.paper == paper),
+          )
+          .toList();
 
-    if (matches.isNotEmpty) {
-      FileOpenService.openFile(matches.first.path);
-    } else {
-      _showSnackBar("File not found in library: $targetType");
+      if (matches.isNotEmpty) {
+        FileOpenService.openFile(matches.first.path);
+        // Use userId! to fix the error
+        await service.logPaperOpen(
+          userId!,
+          matches.first.path.split(Platform.pathSeparator).last,
+        );
+      } else {
+        _showSnackBar("File not found in library: $targetType");
+      }
     }
   }
 
@@ -537,12 +542,18 @@ class _ViewPapersPageState extends State<ViewPapersPage> {
       _showSnackBar("No file found. Check your selections.");
       return;
     }
+
     FileOpenService.openFile(matches.first.path);
 
     final service = AnalyticsService();
     String? userId = await service.getStoredUserId();
     if (userId != null) {
       await service.logButtonClick("open_paper_button", userId);
+      // Use userId! to fix the error
+      await service.logPaperOpen(
+        userId!,
+        matches.first.path.split(Platform.pathSeparator).last,
+      );
     }
   }
 }

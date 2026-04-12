@@ -8,6 +8,7 @@ import 'debug.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../services/analytics_service.dart';
+import 'dart:io';
 
 class HomePage extends StatefulWidget {
   @override
@@ -385,7 +386,13 @@ class _HomePageState extends State<HomePage> {
     final service = AnalyticsService();
     String? userId = await service.getStoredUserId();
     if (userId != null) {
+      // Log the button click
       await service.logButtonClick("open_paper_button", userId);
+      // Log the specific paper name
+      await service.logPaperOpen(
+        userId,
+        matches.first.path.split(Platform.pathSeparator).last,
+      );
     }
   }
 }
