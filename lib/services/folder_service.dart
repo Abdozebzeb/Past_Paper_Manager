@@ -1,21 +1,31 @@
 import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
 
 class FolderService {
-  static String getPastPapersPath() {
-    // Use the LOCALAPPDATA environment variable to get 'C:\Users\<User>\AppData\Local'
-    final localAppData = Platform.environment['LOCALAPPDATA'];
+  static String? _cachedPath;
 
-    // Construct the full path to your app's specific data folder
-    final folder = Directory('$localAppData\\Past Paper Manager\\PastPapers');
-
+  static Future<String> getPastPapersPath() async {
+    if (_cachedPath != null) return _cachedPath!;
+    
+    // This works correctly on Windows (MSIX or Exe) and macOS
+    final directory = await getApplicationSupportDirectory();
+    final path = p.join(directory.path, 'PastPapers');
+    
+    final folder = Directory(path);
     if (!folder.existsSync()) {
       folder.createSync(recursive: true);
     }
-
-    return folder.path;
+    
+    _cachedPath = path;
+    return path;
   }
 
   static void openFolder(String path) {
-    Process.run('explorer', [path]);
+    if (Platform.isWindows) {
+      Process.run('explorer', [path]);
+    } else if (Platform.isMacOS) {
+      Process.run('open', [path]);
+    }
   }
 }

@@ -8,7 +8,7 @@ class DownloadController extends ChangeNotifier {
   bool isDownloading = false;
 
   Future<void> startDownload({
-    required String subject,
+    required List<String> subjects, // Changed from single subject to List
     required int startYear,
     required int endYear,
     required List<String> papers,
@@ -19,11 +19,11 @@ class DownloadController extends ChangeNotifier {
     progress = 0;
     success.clear();
     failed.clear();
-    notifyListeners(); // Updates the UI
+    notifyListeners();
 
     try {
       await Downloader.downloadPapers(
-        subject: subject,
+        subjects: subjects,
         startYear: startYear,
         endYear: endYear,
         papers: papers,
@@ -51,5 +51,4 @@ class DownloadController extends ChangeNotifier {
   }
 }
 
-// Global instance to access from any page
 final downloadController = DownloadController();
