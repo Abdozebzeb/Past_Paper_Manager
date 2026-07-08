@@ -9,9 +9,9 @@ class AboutPage extends StatelessWidget {
     final uri = Uri.parse(url);
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Could not open link")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Could not open link")));
     }
   }
 
@@ -60,18 +60,20 @@ class AboutPage extends StatelessWidget {
                       style: TextStyle(color: Colors.grey),
                     ),
                     const Divider(height: 30, color: Colors.white10),
-                    
-                    _infoRow("App Version", "1.0.1"),
+
+                    _infoRow("App Version", "1.0.4.2"),
                     _infoRow("Version Release Date", "2/5/2026"),
                     _infoRow("Build Type", "Release (Windows)"),
-                    _infoRow("Latest Patch", "Patch #1"),
-                    _infoRow("Patch Release Date", "2/5/2026"),
+                    _infoRow("Latest Patch", "Patch #2"),
+                    _infoRow("Patch Release Date", "8/7/2026"),
 
-                    
                     const SizedBox(height: 20),
                     const Text(
                       "Version Notes:",
-                      style: TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        color: Colors.blueAccent,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const Text(
                       "Initial release with Sidebar Navigation, \nPaper Filtering, and Downloader Support.",
@@ -90,15 +92,27 @@ class AboutPage extends StatelessWidget {
                 children: [
                   
                   IconButton(
-                    icon: const FaIcon(FontAwesomeIcons.github, color: Colors.white70, size: 28),
-                    onPressed: () => _launchURL(context, "https://github.com/Abdozebzeb"),
+                    icon: const FaIcon(
+                      FontAwesomeIcons.github,
+                      color: Colors.white70,
+                      size: 28,
+                    ),
+                    onPressed: () =>
+                        _launchURL(context, "https://github.com/Abdozebzeb"),
                     hoverColor: Colors.blueAccent.withAlpha(25),
                   ),
                   const SizedBox(width: 20),
                   
                   IconButton(
-                    icon: const FaIcon(FontAwesomeIcons.instagram, color: Colors.white70, size: 28),
-                    onPressed: () => _launchURL(context, "https://www.instagram.com/abdullahhzeb/"),
+                    icon: const FaIcon(
+                      FontAwesomeIcons.instagram,
+                      color: Colors.white70,
+                      size: 28,
+                    ),
+                    onPressed: () => _launchURL(
+                      context,
+                      "https://www.instagram.com/abdullahhzeb/",
+                    ),
                     hoverColor: Colors.blueAccent.withAlpha(25),
                   ),
                 ],
@@ -124,7 +138,13 @@ class AboutPage extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: const TextStyle(color: Colors.white70)),
-          Text(value, style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold)),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.blueAccent,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );

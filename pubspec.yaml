@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.1+1
+version: 1.0.4+1
 
 environment:
   sdk: ^3.11.4
@@ -28,13 +28,7 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 
-msix_config:
-  display_name: Past Paper Manager
-  publisher_display_name: Abdullah Zeb
-  identity_name: com.abdullahzeb.ppm
-  msix_version: 1.0.0.0
-  logo_path: assets/logo.png
-  # build_windows: false
+
 flutter_launcher_icons:
   windows:
     generate: true
@@ -54,6 +48,9 @@ dependencies:
   font_awesome_flutter: ^11.0.0
   file_picker: ^10.3.10
   rename_app: ^1.6.5
+  firebase_core: ^4.6.0
+  cloud_firestore: ^6.2.0
+  is_first_run_plus: ^1.3.0
 
 dev_dependencies:
   flutter_test:
@@ -112,3 +109,13 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+msix_config:
+  display_name: CIE Past Paper Manager
+  publisher_display_name: Abdullah Zeb
+  identity_name: AbdullahZeb.CIEPastPaperManager
+  publisher: 	CN=E57DC75B-438E-40E2-8082-A9CF6DA669F2
+  msix_version: 1.0.4.1
+  logo_path: ./assets/msix_icon.png
+  capabilities: internetClient
+  build_windows: false

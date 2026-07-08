@@ -89,7 +89,7 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "https://github.com/Abdozebzeb" "\0"
+            VALUE "CompanyName", "Abdozebzeb" "\0"
             VALUE "FileDescription", "past_paper_manager" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "past_paper_manager" "\0"

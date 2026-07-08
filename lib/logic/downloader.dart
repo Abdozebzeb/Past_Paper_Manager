@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import '../services/folder_service.dart';
+import '../services/analytics_service.dart'; 
 
 class Downloader {
   static Future<void> downloadPapers({
@@ -15,9 +16,7 @@ class Downloader {
     required Function(String) onFail,
   }) async {
     final folderPath = FolderService.getPastPapersPath();
-
     List<String> urls = [];
-
     List<String> seriesList = ['s', 'w', 'm'];
 
     
@@ -45,6 +44,7 @@ class Downloader {
 
     int total = urls.length;
     int done = 0;
+    int successCount = 0; 
 
     
     for (String url in urls) {
@@ -57,6 +57,7 @@ class Downloader {
         if (response.statusCode == 200) {
           File(filePath).writeAsBytesSync(response.bodyBytes);
           onSuccess(filename);
+          successCount++; 
         } else {
           onFail(filename);
         }
@@ -67,6 +68,22 @@ class Downloader {
 
       done++;
       onProgress(done / total);
+    }
+
+    
+    
+    if (successCount > 0) {
+      try {
+        final service = AnalyticsService();
+        String? userId = await service.getStoredUserId();
+        if (userId != null) {
+          
+          await service.logBatchDownloads(userId, successCount);
+        }
+      } catch (e) {
+        
+        stderr.writeln("Analytics logging failed: $e");
+      }
     }
   }
 }

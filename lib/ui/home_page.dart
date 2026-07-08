@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../logic/file_scanner.dart';
 import '../logic/filter_logic.dart';
 import '../logic/paper_model.dart';
@@ -8,7 +7,8 @@ import '../services/folder_service.dart';
 import 'debug.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-
+import '../services/analytics_service.dart';
+import 'dart:io';
 
 class HomePage extends StatefulWidget {
   @override
@@ -32,16 +32,43 @@ class _HomePageState extends State<HomePage> {
     papers = FileScanner.scan(folderPath);
   }
 
-  
   void _launchURL(String url) async {
-  final uri = Uri.parse(url);
-
-  if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Could not open link")),
-    );
+    final uri = Uri.parse(url);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Could not open link")));
+    }
   }
-}
+
+  Future<void> _openRelatedFile(String targetType) async {
+    if (subject == null || series == null || year == null) return;
+
+    final service = AnalyticsService();
+    String? userId = await service.getStoredUserId();
+    if (userId != null) {
+      await service.logButtonClick("quick_action_$targetType", userId);
+    }
+
+    final matches = papers
+        .where(
+          (p) =>
+              p.subject == subject &&
+              p.series == series &&
+              p.year == year &&
+              p.type == targetType &&
+              (targetType == "gt" || p.paper == paper),
+        )
+        .toList();
+
+    if (matches.isNotEmpty) {
+      FileOpenService.openFile(matches.first.path);
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("File not found: $targetType")));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,8 +86,13 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: Color(0xFF0A0F1C),
       appBar: AppBar(
-        title: Text("Past Papers", 
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)
+        title: Text(
+          "Past Papers",
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -74,7 +106,7 @@ class _HomePageState extends State<HomePage> {
             Wrap(
               spacing: 10,
               runSpacing: 12,
-              alignment: WrapAlignment.center, 
+              alignment: WrapAlignment.center,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 _buildPillDropdown(
@@ -91,36 +123,79 @@ class _HomePageState extends State<HomePage> {
                     label: "Series",
                     selectedValue: series,
                     items: FilterLogic.getSeries(papers, subject!),
-                    onChanged: (val) => setState(() {
-                      series = val;
-                      year = type = paper = null;
-                    }),
+                    onChanged: (val) {
+                      setState(() {
+                        series = val;
+                        var validYears = FilterLogic.getYears(
+                          papers,
+                          subject!,
+                          series!,
+                        );
+                        if (year != null && !validYears.contains(year)) {
+                          year = type = paper = null;
+                        }
+                      });
+                    },
                   ),
                 if (series != null)
                   _buildPillDropdown(
                     label: "Year",
                     selectedValue: year,
                     items: FilterLogic.getYears(papers, subject!, series!),
-                    onChanged: (val) => setState(() {
-                      year = val;
-                      type = paper = null;
-                    }),
+                    onChanged: (val) {
+                      setState(() {
+                        year = val;
+                        var validTypes = FilterLogic.getTypes(
+                          papers,
+                          subject!,
+                          series!,
+                          year!,
+                        );
+                        if (type != null && !validTypes.contains(type)) {
+                          type = paper = null;
+                        }
+                      });
+                    },
                   ),
                 if (year != null)
                   _buildPillDropdown(
                     label: "Type",
                     selectedValue: type,
-                    items: FilterLogic.getTypes(papers, subject!, series!, year!),
-                    onChanged: (val) => setState(() {
-                      type = val;
-                      paper = null;
-                    }),
+                    items: FilterLogic.getTypes(
+                      papers,
+                      subject!,
+                      series!,
+                      year!,
+                    ),
+                    onChanged: (val) {
+                      setState(() {
+                        type = val;
+                        if (type == "gt") {
+                          paper = null;
+                        } else if (paper != null) {
+                          var validPapers = FilterLogic.getPapers(
+                            papers,
+                            subject!,
+                            series!,
+                            year!,
+                            type!,
+                          );
+                          if (!validPapers.contains(paper)) paper = null;
+                        }
+                      });
+                    },
                   ),
                 if (type != null && type != "gt")
                   _buildPillDropdown(
                     label: "Paper",
                     selectedValue: paper,
-                    items: FilterLogic.getPapers(papers, subject!, series!, year!, type!),
+                    items: FilterLogic.getPapers(
+                      papers,
+                      subject!,
+                      series!,
+                      year!,
+                      type!,
+                    ),
                     onChanged: (val) => setState(() {
                       paper = val;
                     }),
@@ -130,35 +205,81 @@ class _HomePageState extends State<HomePage> {
 
             if (isSelectionComplete) ...[
               SizedBox(height: 30),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: openFile,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blueAccent,
-                    foregroundColor: Colors.white,
-                    padding: EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                    elevation: 8,
+              Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: 55,
+                      child: ElevatedButton(
+                        onPressed: openFile,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blueAccent,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          elevation: 8,
+                        ),
+                        child: Text(
+                          "Open Paper",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
-                  child: Text("Open Paper", 
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)
+                  SizedBox(width: 12),
+                  Container(
+                    height: 55,
+                    width: 55,
+                    decoration: BoxDecoration(
+                      color: Colors.blueAccent,
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: PopupMenuButton<String>(
+                      icon: Icon(
+                        Icons.arrow_drop_down,
+                        color: Colors.white,
+                        size: 30,
+                      ),
+                      onSelected: (val) => _openRelatedFile(val),
+                      onOpened: () async {
+                        final s = AnalyticsService();
+                        String? uid = await s.getStoredUserId();
+                        if (uid != null)
+                          await s.logButtonClick("more_options_button", uid);
+                      },
+                      itemBuilder: (context) => [
+                        if (type == "qp")
+                          PopupMenuItem(
+                            value: "ms",
+                            child: Text("Open Marking Scheme"),
+                          ),
+                        if (type == "ms")
+                          PopupMenuItem(
+                            value: "qp",
+                            child: Text("Open Question Paper"),
+                          ),
+                        PopupMenuItem(
+                          value: "gt",
+                          child: Text("Open Grade Threshold"),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                ],
               ),
             ],
 
             SizedBox(height: 40),
-            
-            DebugPanel(
-              onRefresh: refreshFiles,
-              folderPath: folderPath,
-            ),
+
+            DebugPanel(onRefresh: refreshFiles, folderPath: folderPath),
           ],
         ),
       ),
 
-      
       bottomNavigationBar: Container(
         padding: EdgeInsets.only(bottom: 20, top: 10),
         child: Column(
@@ -167,7 +288,10 @@ class _HomePageState extends State<HomePage> {
           children: [
             Text(
               "Created with ❤️ for Students By Abdullah Zeb",
-              style: TextStyle(color: Colors.grey.withOpacity(0.7), fontSize: 12),
+              style: TextStyle(
+                color: Colors.grey.withOpacity(0.7),
+                fontSize: 12,
+              ),
             ),
             SizedBox(height: 8),
             Row(
@@ -179,18 +303,16 @@ class _HomePageState extends State<HomePage> {
                     color: Colors.white.withOpacity(0.8),
                     size: 18,
                   ),
-                  onPressed: () => _launchURL("https://github.com/yourusername"),
-                  tooltip: "GitHub",
+                  onPressed: () => _launchURL("https://github.com/Abdozebzeb"),
                 ),
-
                 IconButton(
                   icon: FaIcon(
                     FontAwesomeIcons.instagram,
                     color: Colors.white.withOpacity(0.8),
                     size: 18,
                   ),
-                  onPressed: () => _launchURL("https://instagram.com/yourusername"),
-                  tooltip: "Instagram",
+                  onPressed: () =>
+                      _launchURL("https://www.instagram.com/abdullahhzeb/"),
                 ),
               ],
             ),
@@ -222,7 +344,9 @@ class _HomePageState extends State<HomePage> {
           isExpanded: true,
           icon: Icon(Icons.expand_more, color: Colors.blueAccent, size: 20),
           style: TextStyle(color: Colors.white, fontSize: 13),
-          items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+          items: items
+              .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+              .toList(),
           onChanged: (val) => onChanged(val!),
         ),
       ),
@@ -233,18 +357,22 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       papers = FileScanner.scan(folderPath);
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Files refreshed")),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text("Files refreshed")));
   }
 
-  void openFile() {
-    final matches = papers.where((p) =>
-        p.subject == subject &&
-        p.series == series &&
-        p.year == year &&
-        p.type == type &&
-        (type == "gt" || p.paper == paper)).toList();
+  void openFile() async {
+    final matches = papers
+        .where(
+          (p) =>
+              p.subject == subject &&
+              p.series == series &&
+              p.year == year &&
+              p.type == type &&
+              (type == "gt" || p.paper == paper),
+        )
+        .toList();
 
     if (matches.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -254,5 +382,17 @@ class _HomePageState extends State<HomePage> {
     }
 
     FileOpenService.openFile(matches.first.path);
+
+    final service = AnalyticsService();
+    String? userId = await service.getStoredUserId();
+    if (userId != null) {
+      
+      await service.logButtonClick("open_paper_button", userId);
+      
+      await service.logPaperOpen(
+        userId,
+        matches.first.path.split(Platform.pathSeparator).last,
+      );
+    }
   }
 }

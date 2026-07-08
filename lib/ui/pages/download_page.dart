@@ -68,11 +68,11 @@ class _DownloadPageState extends State<DownloadPage> with AutomaticKeepAliveClie
                 children: [
                   Row(
                     children: [
-                      Expanded(child: _input("Subject Code", subjectController)),
+                      Expanded(child: _input("Subject Code (9701)", subjectController)),
                       const SizedBox(width: 10),
-                      Expanded(child: _input("Start Year", startYearController)),
+                      Expanded(child: _input("Start Year (20)", startYearController)),
                       const SizedBox(width: 10),
-                      Expanded(child: _input("End Year", endYearController)),
+                      Expanded(child: _input("End Year (25)", endYearController)),
                     ],
                   ),
                   const SizedBox(height: 10),

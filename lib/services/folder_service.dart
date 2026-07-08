@@ -2,8 +2,11 @@ import 'dart:io';
 
 class FolderService {
   static String getPastPapersPath() {
-    final exeDir = File(Platform.resolvedExecutable).parent;
-    final folder = Directory('${exeDir.path}\\PastPapers');
+    
+    final localAppData = Platform.environment['LOCALAPPDATA'];
+
+    
+    final folder = Directory('$localAppData\\Past Paper Manager\\PastPapers');
 
     if (!folder.existsSync()) {
       folder.createSync(recursive: true);
