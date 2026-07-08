@@ -28,13 +28,7 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 
-msix_config:
-  display_name: Past Paper Manager
-  publisher_display_name: Abdullah Zeb
-  identity_name: com.abdullahzeb.ppm
-  msix_version: 1.0.0.0
-  logo_path: assets/logo.png
-  # build_windows: false
+
 flutter_launcher_icons:
   windows:
     generate: true
@@ -115,3 +109,13 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+msix_config:
+  display_name: CIE Past Paper Manager
+  publisher_display_name: Abdullah Zeb
+  identity_name: AbdullahZeb.CIEPastPaperManager
+  publisher: 	CN=E57DC75B-438E-40E2-8082-A9CF6DA669F2
+  msix_version: 1.0.4.1
+  logo_path: ./assets/msix_icon.png
+  capabilities: internetClient
+  build_windows: false
