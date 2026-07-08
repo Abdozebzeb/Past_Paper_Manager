@@ -3,35 +3,48 @@ import 'package:http/http.dart' as http;
 import '../services/folder_service.dart';
 import '../services/config_service.dart';
 
+class DownloadJob {
+  String subject;
+  int startYear;
+  int endYear;
+  List<String> papers;
+  List<String> variants;
+  List<String> types;
+
+  DownloadJob({
+    required this.subject,
+    required this.startYear,
+    required this.endYear,
+    required this.papers,
+    required this.variants,
+    required this.types,
+  });
+}
+
 class Downloader {
-  static Future<void> downloadPapers({
-    required List<String> subjects,
-    required int startYear,
-    required int endYear,
-    required List<String> papers,
-    required List<String> variants,
-    required List<String> types,
+  static Future<void> downloadBatch({
+    required List<DownloadJob> jobs,
     required Function(double) onProgress,
     required Function(String) onSuccess,
     required Function(String) onFail,
   }) async {
     final folderPath = await FolderService.getPastPapersPath();
     List<String> seriesList = ['s', 'w', 'm'];
-    List<String> urlsToTry = [];
+    List<String> allUrls = [];
 
     
-    for (String subject in subjects) {
-      for (int year = startYear; year <= endYear; year++) {
+    for (var job in jobs) {
+      for (int year = job.startYear; year <= job.endYear; year++) {
         String yr = year.toString().padLeft(2, '0');
         for (String series in seriesList) {
-          for (String type in types) {
+          for (String type in job.types) {
             if (type == 'gt') {
-              urlsToTry.add("${subject}_${series}${yr}_gt.pdf");
+              allUrls.add("${job.subject}_${series}${yr}_gt.pdf");
             } else {
-              for (String p in papers) {
-                for (String v in variants) {
+              for (String p in job.papers) {
+                for (String v in job.variants) {
                   if (series == 'm' && v != '2') continue;
-                  urlsToTry.add("${subject}_${series}${yr}_${type}_${p}${v}.pdf");
+                  allUrls.add("${job.subject}_${series}${yr}_${type}_$p$v.pdf");
                 }
               }
             }
@@ -40,13 +53,12 @@ class Downloader {
       }
     }
 
-    int total = urlsToTry.length;
+    int total = allUrls.length;
+    if (total == 0) return;
     int done = 0;
 
-    for (String fileName in urlsToTry) {
+    for (String fileName in allUrls) {
       bool downloaded = false;
-      
-      
       for (String basePath in ConfigService.downloadPaths) {
         try {
           final response = await http.get(Uri.parse("$basePath$fileName"));
@@ -55,13 +67,11 @@ class Downloader {
             await file.writeAsBytes(response.bodyBytes);
             onSuccess(fileName);
             downloaded = true;
-            break; 
+            break;
           }
         } catch (_) {}
       }
-
       if (!downloaded) onFail(fileName);
-      
       done++;
       onProgress(done / total);
     }

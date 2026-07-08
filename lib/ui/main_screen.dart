@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'pages/view_papers_page.dart';
 import 'pages/download_page.dart';
-import 'pages/about_page.dart';
-import 'pages/import_export_page.dart';
 import 'pages/settings_page.dart';
 import 'pages/reader_page.dart';
 import '../logic/reader_controller.dart';
@@ -21,9 +19,7 @@ class _MainScreenState extends State<MainScreen> {
     const ViewPapersPage(),
     const ReaderPage(),
     const DownloadPage(),
-    const ImportExportPage(),
     const SettingsPage(),
-    const AboutPage(),
   ];
 
   @override
@@ -36,25 +32,26 @@ class _MainScreenState extends State<MainScreen> {
           NavigationRail(
             selectedIndex: _selectedIndex,
             backgroundColor: const Color(0xFF0D121F),
+            unselectedIconTheme: const IconThemeData(color: Colors.grey),
+            selectedIconTheme: const IconThemeData(color: Colors.blueAccent),
             onDestinationSelected: (i) => setState(() => _selectedIndex = i),
             labelType: NavigationRailLabelType.all,
             destinations: [
-              const NavigationRailDestination(icon: Icon(Icons.library_books), label: Text("Library")),
+              const NavigationRailDestination(icon: Icon(Icons.library_books_outlined), selectedIcon: Icon(Icons.library_books), label: Text("Library")),
               NavigationRailDestination(
                 icon: Badge(
                   label: Text(reader.openFiles.length.toString()),
                   isLabelVisible: reader.openFiles.isNotEmpty,
-                  child: const Icon(Icons.menu_book),
+                  child: const Icon(Icons.menu_book_outlined),
                 ),
+                selectedIcon: const Icon(Icons.menu_book),
                 label: const Text("Reader"),
               ),
-              const NavigationRailDestination(icon: Icon(Icons.download), label: Text("Download")),
-              const NavigationRailDestination(icon: Icon(Icons.swap_horiz), label: Text("Data")),
-              const NavigationRailDestination(icon: Icon(Icons.settings), label: Text("Settings")),
-              const NavigationRailDestination(icon: Icon(Icons.info), label: Text("About")),
+              const NavigationRailDestination(icon: Icon(Icons.cloud_download_outlined), selectedIcon: Icon(Icons.cloud_download), label: Text("Download")),
+              const NavigationRailDestination(icon: Icon(Icons.settings_outlined), selectedIcon: Icon(Icons.settings), label: Text("Settings")),
             ],
           ),
-          const VerticalDivider(thickness: 1, width: 1),
+          const VerticalDivider(thickness: 1, width: 1, color: Colors.white10),
           Expanded(child: _pages[_selectedIndex]),
         ],
       ),
