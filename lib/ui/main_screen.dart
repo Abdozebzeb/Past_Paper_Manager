@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../logic/reader_controller.dart';
 import 'pages/view_papers_page.dart';
 import 'pages/download_page.dart';
 import 'pages/settings_page.dart';
 import 'pages/reader_page.dart';
-import '../logic/reader_controller.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -15,45 +15,64 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
 
-  final List<Widget> _pages = [
-    const ViewPapersPage(),
-    const ReaderPage(),
-    const DownloadPage(),
-    const SettingsPage(),
-  ];
+  Widget _getPage(int index, int readerIndex) {
+    switch (index) {
+      case 0: return const ViewPapersPage();
+      case 1: return const DownloadPage();
+      case 2: return const ReaderPage();
+      case 3: return const SettingsPage();
+      default: return const ViewPapersPage();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final reader = Provider.of<ReaderController>(context);
+    bool hasTabs = reader.openFiles.isNotEmpty;
 
     return Scaffold(
       body: Row(
         children: [
-          NavigationRail(
-            selectedIndex: _selectedIndex,
-            backgroundColor: const Color(0xFF0D121F),
-            unselectedIconTheme: const IconThemeData(color: Colors.grey),
-            selectedIconTheme: const IconThemeData(color: Colors.blueAccent),
-            onDestinationSelected: (i) => setState(() => _selectedIndex = i),
-            labelType: NavigationRailLabelType.all,
-            destinations: [
-              const NavigationRailDestination(icon: Icon(Icons.library_books_outlined), selectedIcon: Icon(Icons.library_books), label: Text("Library")),
-              NavigationRailDestination(
-                icon: Badge(
-                  label: Text(reader.openFiles.length.toString()),
-                  isLabelVisible: reader.openFiles.isNotEmpty,
-                  child: const Icon(Icons.menu_book_outlined),
-                ),
-                selectedIcon: const Icon(Icons.menu_book),
-                label: const Text("Reader"),
-              ),
-              const NavigationRailDestination(icon: Icon(Icons.cloud_download_outlined), selectedIcon: Icon(Icons.cloud_download), label: Text("Download")),
-              const NavigationRailDestination(icon: Icon(Icons.settings_outlined), selectedIcon: Icon(Icons.settings), label: Text("Settings")),
-            ],
+          Container(
+            width: 80,
+            color: Theme.of(context).cardColor,
+            child: Column(
+              children: [
+                const SizedBox(height: 20),
+                _navItem(Icons.library_books, 0, "Library"),
+                _navItem(Icons.cloud_download, 1, "Download"),
+                const Spacer(),
+                if (hasTabs) _navItem(Icons.menu_book, 2, "Reader", badge: reader.openFiles.length),
+                _navItem(Icons.settings, 3, "Settings"),
+                const SizedBox(height: 20),
+              ],
+            ),
           ),
-          const VerticalDivider(thickness: 1, width: 1, color: Colors.white10),
-          Expanded(child: _pages[_selectedIndex]),
+          const VerticalDivider(width: 1, thickness: 1),
+          Expanded(child: _getPage(_selectedIndex, 2)),
         ],
+      ),
+    );
+  }
+
+  Widget _navItem(IconData icon, int index, String label, {int? badge}) {
+    bool isSelected = _selectedIndex == index;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedIndex = index),
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 10),
+        child: Column(
+          children: [
+            Stack(
+              children: [
+                Icon(icon, color: isSelected ? Colors.blueAccent : Colors.grey, size: 28),
+                if (badge != null && badge > 0)
+                  Positioned(right: 0, child: CircleAvatar(radius: 7, backgroundColor: Colors.red, child: Text(badge.toString(), style: const TextStyle(fontSize: 9)))),
+              ],
+            ),
+            Text(label, style: TextStyle(fontSize: 10, color: isSelected ? Colors.blueAccent : Colors.grey)),
+          ],
+        ),
       ),
     );
   }
