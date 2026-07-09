@@ -12,15 +12,14 @@ class ReaderPage extends StatelessWidget {
     final reader = Provider.of<ReaderController>(context);
 
     if (reader.openFiles.isEmpty) {
-      return const Center(child: Text("No PDFs open. Select a paper to read."));
+      return const Center(child: Text("No papers are currently open."));
     }
 
     return Column(
       children: [
-        // Tab Bar
         Container(
-          height: 40,
-          color: Theme.of(context).cardColor,
+          height: 45,
+          color: Theme.of(context).cardColor.withOpacity(0.5),
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             itemCount: reader.openFiles.length,
@@ -29,19 +28,21 @@ class ReaderPage extends StatelessWidget {
               return GestureDetector(
                 onTap: () => reader.setTab(index),
                 child: Container(
+                  margin: const EdgeInsets.only(left: 8, top: 5),
                   padding: const EdgeInsets.symmetric(horizontal: 15),
-                  alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: isSelected ? Colors.blueAccent.withOpacity(0.2) : Colors.transparent,
-                    border: Border(bottom: BorderSide(color: isSelected ? Colors.blueAccent : Colors.transparent, width: 2)),
+                    color: isSelected ? Theme.of(context).scaffoldBackgroundColor : Colors.transparent,
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
                   ),
                   child: Row(
                     children: [
                       Text(reader.openFiles[index].name, style: TextStyle(fontSize: 12, color: isSelected ? Colors.blueAccent : Colors.grey)),
-                      const SizedBox(width: 8),
-                      GestureDetector(
-                        onTap: () => reader.closeTab(index),
-                        child: const Icon(Icons.close, size: 14, color: Colors.grey),
+                      const SizedBox(width: 10),
+                      IconButton(
+                        onPressed: () => reader.closeTab(index),
+                        icon: const Icon(Icons.close, size: 14),
+                        constraints: const BoxConstraints(),
+                        padding: EdgeInsets.zero,
                       )
                     ],
                   ),
@@ -50,10 +51,10 @@ class ReaderPage extends StatelessWidget {
             },
           ),
         ),
-        // PDF View
         Expanded(
-          child: SfPdfViewer.file(
-            File(reader.openFiles[reader.currentTabIndex].path),
+          child: IndexedStack(
+            index: reader.currentTabIndex,
+            children: reader.openFiles.map((file) => SfPdfViewer.file(File(file.path))).toList(),
           ),
         ),
       ],

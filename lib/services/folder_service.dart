@@ -8,7 +8,7 @@ class FolderService {
   static Future<String> getPastPapersPath() async {
     if (_cachedPath != null) return _cachedPath!;
     
-    // This works correctly on Windows (MSIX or Exe) and macOS
+    // getApplicationSupportDirectory is safe for MSIX and macOS sandboxing
     final directory = await getApplicationSupportDirectory();
     final path = p.join(directory.path, 'PastPapers');
     
