@@ -8,6 +8,7 @@ import 'logic/reader_controller.dart';
 import 'services/config_service.dart';
 import 'services/folder_service.dart';
 import 'ui/main_screen.dart';
+import 'logic/download_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,6 +24,7 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
         ChangeNotifierProvider(create: (_) => ReaderController()),
+        ChangeNotifierProvider(create: (_) => DownloadController()), 
       ],
       child: const MyApp(),
     ),

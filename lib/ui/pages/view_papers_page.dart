@@ -34,7 +34,6 @@ class _ViewPapersPageState extends State<ViewPapersPage> {
     }
   }
 
-  /// Helper method to find and open the file in the reader
   void _openPaperPath(String sub, String ser, String yr, String ty, String? p) {
     try {
       final match = papers.firstWhere((item) =>
@@ -65,15 +64,12 @@ class _ViewPapersPageState extends State<ViewPapersPage> {
         title: const Text("Past Papers Library", style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        actions: [
-          IconButton(onPressed: _refresh, icon: const Icon(Icons.refresh)),
-        ],
+        // Reload icon removed from here
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(25),
         child: Column(
           children: [
-            // Filter Pills
             Wrap(
               spacing: 12,
               runSpacing: 15,
@@ -104,7 +100,6 @@ class _ViewPapersPageState extends State<ViewPapersPage> {
             
             const SizedBox(height: 40),
 
-            // Open Button and Quick Actions
             if (isComplete)
               Row(
                 children: [
@@ -134,9 +129,13 @@ class _ViewPapersPageState extends State<ViewPapersPage> {
                       icon: const Icon(Icons.more_vert, color: Colors.white),
                       onSelected: (val) => _openPaperPath(subject!, series!, year!, val, paper),
                       itemBuilder: (context) => [
-                        const PopupMenuItem(value: "qp", child: Text("Open Question Paper")),
-                        const PopupMenuItem(value: "ms", child: Text("Open Marking Scheme")),
-                        const PopupMenuItem(value: "gt", child: Text("Open Grade Threshold")),
+                        // HIDE OPTIONS BASED ON CURRENT SELECTION
+                        if (type != "qp")
+                          const PopupMenuItem(value: "qp", child: Text("Open Question Paper")),
+                        if (type != "ms")
+                          const PopupMenuItem(value: "ms", child: Text("Open Marking Scheme")),
+                        if (type != "gt")
+                          const PopupMenuItem(value: "gt", child: Text("Open Grade Threshold")),
                       ],
                     ),
                   ),
