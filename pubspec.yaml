@@ -36,7 +36,7 @@ dependencies:
   cloud_firestore: ^5.0.2 # Updated
   url_launcher: ^6.2.2
   font_awesome_flutter: ^10.6.0
-  syncfusion_flutter_pdfviewer: ^24.1.41
+  syncfusion_flutter_pdfviewer: ^31.1.22
   file_picker: ^6.1.1
 
 dev_dependencies:
