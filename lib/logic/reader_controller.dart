@@ -7,6 +7,13 @@ class OpenedFile {
 }
 
 class ReaderController extends ChangeNotifier {
+  int _mainMenuIndex = 0;
+int get mainMenuIndex => _mainMenuIndex;
+
+void setMenuIndex(int index) {
+  _mainMenuIndex = index;
+  notifyListeners();
+}
   final List<OpenedFile> _openFiles = [];
   int _currentTabIndex = 0;
 
@@ -14,6 +21,7 @@ class ReaderController extends ChangeNotifier {
   int get currentTabIndex => _currentTabIndex;
 
   void openFile(String name, String path) {
+    _mainMenuIndex = 2;
     // Check if already open
     int existingIndex = _openFiles.indexWhere((f) => f.path == path);
     if (existingIndex != -1) {
@@ -21,6 +29,7 @@ class ReaderController extends ChangeNotifier {
     } else {
       _openFiles.add(OpenedFile(name, path));
       _currentTabIndex = _openFiles.length - 1;
+      
     }
     notifyListeners();
   }

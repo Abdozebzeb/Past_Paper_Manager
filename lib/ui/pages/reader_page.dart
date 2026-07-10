@@ -116,16 +116,18 @@ class _ReaderPageState extends State<ReaderPage> {
                         width: viewerWidth,
                         height: constraints.maxHeight, // Keep height full
                         child: IndexedStack(
-                          index: reader.currentTabIndex,
-                          children: reader.openFiles.map((file) {
-                            return SfPdfViewer.file(
-                              File(file.path),
-                              controller: _pdfViewerController,
-                              enableDoubleTapZooming: true,
-                              interactionMode: PdfInteractionMode.pan,
-                            );
-                          }).toList(),
-                        ),
+  index: reader.currentTabIndex,
+  children: reader.openFiles.map((file) {
+    // Adding a UniqueKey ensures Flutter recreates the viewer for different files
+    return SfPdfViewer.file(
+      File(file.path),
+      key: ValueKey(file.path), // CRITICAL FIX
+      controller: _pdfViewerController,
+      enableDoubleTapZooming: true,
+      interactionMode: PdfInteractionMode.pan,
+    );
+  }).toList(),
+),
                       ),
                     ),
 

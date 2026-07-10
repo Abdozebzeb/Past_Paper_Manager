@@ -5,6 +5,7 @@ import 'firebase_options.dart';
 import 'logic/app_state.dart';
 import 'logic/settings_provider.dart';
 import 'logic/reader_controller.dart';
+import 'logic/library_provider.dart';
 import 'services/config_service.dart';
 import 'services/folder_service.dart';
 import 'services/analytics_service.dart'; // Added
@@ -26,6 +27,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
         ChangeNotifierProvider(create: (_) => ReaderController()),
         ChangeNotifierProvider(create: (_) => DownloadController()), 
+        ChangeNotifierProvider(create: (_) => LibraryProvider()),
       ],
       child: const MyApp(),
     ),

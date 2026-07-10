@@ -1,2 +1,4 @@
-1.0.4.2
-This commit still does not work for MSIX but works for inno, if inno has already created the files and folders only then it works for misx, i think msix does not have the perms for write files
+now there are 3 problems which needs to be fixed:
+on viewpapers page when i chnage the screen to reader or anything else the dropdown data should be retained and not be cleared
+when i click open paper it should take me to the pdf reader screen
+when i open a new paper the previous tabs get stuck on loading
