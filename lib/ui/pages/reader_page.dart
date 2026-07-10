@@ -12,14 +12,14 @@ class ReaderPage extends StatelessWidget {
     final reader = Provider.of<ReaderController>(context);
 
     if (reader.openFiles.isEmpty) {
-      return const Center(child: Text("No papers are currently open."));
+      return const Center(child: Text("No papers are currently open in the reader."));
     }
 
     return Column(
       children: [
         Container(
           height: 45,
-          color: Theme.of(context).cardColor.withOpacity(0.5),
+          color: const Color(0xFF161D2D), // Updated color
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             itemCount: reader.openFiles.length,
@@ -31,12 +31,13 @@ class ReaderPage extends StatelessWidget {
                   margin: const EdgeInsets.only(left: 8, top: 5),
                   padding: const EdgeInsets.symmetric(horizontal: 15),
                   decoration: BoxDecoration(
-                    color: isSelected ? Theme.of(context).scaffoldBackgroundColor : Colors.transparent,
+                    color: isSelected ? const Color(0xFF0A0F1C) : Colors.transparent,
                     borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
                   ),
                   child: Row(
                     children: [
-                      Text(reader.openFiles[index].name, style: TextStyle(fontSize: 12, color: isSelected ? Colors.blueAccent : Colors.grey)),
+                      Text(reader.openFiles[index].name, 
+                        style: TextStyle(fontSize: 11, color: isSelected ? Colors.blueAccent : Colors.grey)),
                       const SizedBox(width: 10),
                       IconButton(
                         onPressed: () => reader.closeTab(index),

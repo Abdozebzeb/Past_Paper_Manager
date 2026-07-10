@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../logic/downloader.dart';
 import '../../logic/download_controller.dart';
+import '../../services/analytics_service.dart';
 
 class DownloadPage extends StatefulWidget {
   const DownloadPage({super.key});
@@ -10,17 +12,32 @@ class DownloadPage extends StatefulWidget {
 }
 
 class _DownloadPageState extends State<DownloadPage> {
-  // Initialize with one default job
   final List<DownloadJob> _jobs = [
-    DownloadJob(
-      subjects: [],
-      startYear: 20,
-      endYear: 25,
-      papers: ["2", "4", "6"],
-      variants: ["1", "2", "3"],
-      types: ["qp", "ms"],
-    )
+    DownloadJob(subjects: [], startYear: 20, endYear: 25, papers: ["2", "4", "6"], variants: ["1", "2", "3"], types: ["qp", "ms"])
   ];
+
+  final List<String> _successList = [];
+  final List<String> _failedList = [];
+
+  void _runAll() async {
+    final controller = Provider.of<DownloadController>(context, listen: false);
+    _successList.clear();
+    _failedList.clear();
+
+    await Downloader.downloadBatch(
+      jobs: _jobs,
+      onProgress: (p) => controller.updateProgress(p),
+      onSuccess: (f) => setState(() => _successList.add(f)),
+      onFail: (f) => setState(() => _failedList.add(f)),
+    );
+    
+    // Log batch results
+    final analytics = AnalyticsService();
+    String? uid = await analytics.getStoredUserId();
+    if (uid != null && _successList.isNotEmpty) {
+      await analytics.logBatchDownloads(uid, _successList.length);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,221 +45,163 @@ class _DownloadPageState extends State<DownloadPage> {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        title: const Text("Download Manager", style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
+      appBar: AppBar(title: const Text("Download Manager"), backgroundColor: Colors.transparent),
       body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
+        padding: const EdgeInsets.all(25),
         children: [
-          // Render each job card
           ..._jobs.asMap().entries.map((entry) => _buildJobCard(entry.key, entry.value)),
 
-          const SizedBox(height: 10),
-
-          // Fancy + Button (Centered, no text)
           Center(
-            child: GestureDetector(
-              onTap: () => setState(() => _jobs.add(DownloadJob(
-                    subjects: [],
-                    startYear: 20,
-                    endYear: 25,
-                    papers: ["2", "4", "6"],
-                    variants: ["1", "2", "3"],
-                    types: ["qp", "ms"],
-                  ))),
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.blueAccent.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.blueAccent.withAlpha(100)),
-                ),
-                child: const Icon(Icons.add, color: Colors.blueAccent, size: 30),
-              ),
+            child: IconButton(
+              icon: const Icon(Icons.add_circle, color: Colors.blueAccent, size: 40),
+              onPressed: () => setState(() => _jobs.add(DownloadJob(subjects: [], startYear: 20, endYear: 25, papers: ["2", "4", "6"], variants: ["1", "2", "3"], types: ["qp", "ms"]))),
             ),
           ),
 
-          const SizedBox(height: 40),
-
-          // Progress Section
-          if (controller.isDownloading)
-            Container(
-              padding: const EdgeInsets.all(20),
-              margin: const EdgeInsets.only(bottom: 20),
-              decoration: BoxDecoration(
-                color: Theme.of(context).cardColor,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.blueAccent.withAlpha(30)),
-              ),
+          const SizedBox(height: 30),
+          
+          if (controller.isDownloading || controller.progress > 0)
+            _sectionCard(
+              title: "Progress",
               child: Column(
                 children: [
                   LinearProgressIndicator(
                     value: controller.progress,
-                    backgroundColor: Colors.blueAccent.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(10),
+                    backgroundColor: Colors.white10,
                     minHeight: 8,
+                    borderRadius: BorderRadius.circular(10),
+                    color: controller.progress >= 1.0 ? Colors.green : Colors.blueAccent,
                   ),
                   const SizedBox(height: 10),
-                  Text(
-                    "Downloading Papers: ${(controller.progress * 100).toStringAsFixed(0)}%",
-                    style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blueAccent),
-                  ),
+                  Text("${(controller.progress * 100).toStringAsFixed(0)}%", 
+                    style: TextStyle(fontWeight: FontWeight.bold, color: controller.progress >= 1.0 ? Colors.green : Colors.white)),
                 ],
               ),
             ),
 
-          // Start All Button
-          SizedBox(
-            height: 60,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blueAccent,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                elevation: 10,
+          const SizedBox(height: 20),
+
+          _sectionCard(
+            title: "Status Results",
+            child: ExpansionTile(
+              title: Row(
+                children: [
+                  Text("Success: ${_successList.length}", style: const TextStyle(color: Colors.green, fontSize: 14, fontWeight: FontWeight.bold)),
+                  const SizedBox(width: 20),
+                  Text("Failed: ${_failedList.length}", style: const TextStyle(color: Colors.redAccent, fontSize: 14, fontWeight: FontWeight.bold)),
+                ],
               ),
-              onPressed: controller.isDownloading ? null : () => controller.runDownloads(_jobs),
-              child: const Text(
-                "Start All Downloads",
-                style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-              ),
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    TextButton(onPressed: () => _copy(_failedList), child: const Text("Copy Failed")),
+                    TextButton(onPressed: () => _copy(_successList), child: const Text("Copy Success")),
+                  ],
+                )
+              ],
             ),
           ),
+
           const SizedBox(height: 30),
+          
+          SizedBox(
+            height: 55,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))),
+              onPressed: controller.isDownloading ? null : _runAll,
+              child: const Text("Start All Downloads", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            ),
+          ),
+          const SizedBox(height: 50),
         ],
       ),
     );
   }
 
+  void _copy(List<String> list) {
+    if (list.isEmpty) return;
+    Clipboard.setData(ClipboardData(text: list.join("\n")));
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Copied to clipboard")));
+  }
+
   Widget _buildJobCard(int index, DownloadJob job) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 25),
-      padding: const EdgeInsets.all(25),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.blueAccent.withAlpha(50)),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 15, offset: const Offset(0, 8))
-        ],
-      ),
+      margin: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(color: const Color(0xFF161D2D), borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.blueAccent.withOpacity(0.1))),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                "Download Job #${index + 1}",
-                style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-              if (index != 0)
-                IconButton(
-                  onPressed: () => setState(() => _jobs.removeAt(index)),
-                  icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 22),
-                )
+              Text("Job #${index + 1}", style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold)),
+              if (index != 0) IconButton(onPressed: () => setState(() => _jobs.removeAt(index)), icon: const Icon(Icons.delete, color: Colors.redAccent, size: 18)),
             ],
           ),
-          const Divider(height: 30, color: Colors.white10),
-          
-          // Subject Input
-          _buildTextField(
-            label: "Subject Codes (e.g., 9701, 9702)",
-            hint: "Separate with commas",
-            onChanged: (v) => job.subjects = v.split(',').map((e) => e.trim()).toList(),
-          ),
-          
           const SizedBox(height: 15),
-
-          // Years Row
-          Row(
-            children: [
-              Expanded(child: _buildTextField(label: "Start Year", hint: "20", onChanged: (v) => job.startYear = int.tryParse(v) ?? 20)),
-              const SizedBox(width: 15),
-              Expanded(child: _buildTextField(label: "End Year", hint: "25", onChanged: (v) => job.endYear = int.tryParse(v) ?? 25)),
-            ],
-          ),
-
-          const SizedBox(height: 15),
-
-          // Papers and Variants Row
-          Row(
-            children: [
-              Expanded(child: _buildTextField(label: "Papers", hint: "2, 4, 6", onChanged: (v) => job.papers = v.split(',').map((e) => e.trim()).toList())),
-              const SizedBox(width: 15),
-              Expanded(child: _buildTextField(label: "Variants", hint: "1, 2, 3", onChanged: (v) => job.variants = v.split(',').map((e) => e.trim()).toList())),
-            ],
-          ),
-
-          const SizedBox(height: 20),
-
-          // Types Checkboxes (The Restored GUI part)
-          const Text("Include Types:", style: TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold)),
+          _input("Subject Codes (9701, 9702)", (v) => job.subjects = v.split(',').map((e) => e.trim()).toList()),
           const SizedBox(height: 10),
           Row(
             children: [
-              _buildTypeCheck("QP", "qp", job),
-              _buildTypeCheck("MS", "ms", job),
-              _buildTypeCheck("GT", "gt", job),
+              Expanded(child: _input("Start Year (20)", (v) => job.startYear = int.tryParse(v) ?? 20)),
+              const SizedBox(width: 10),
+              Expanded(child: _input("End Year (25)", (v) => job.endYear = int.tryParse(v) ?? 25)),
             ],
           ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(child: _input("Papers (2,4)", (v) => job.papers = v.split(',').map((e) => e.trim()).toList())),
+              const SizedBox(width: 10),
+              Expanded(child: _input("Variants (1,2)", (v) => job.variants = v.split(',').map((e) => e.trim()).toList())),
+            ],
+          ),
+          const SizedBox(height: 15),
+          Row(
+            children: ["qp", "ms", "gt"].map((t) => Row(
+              children: [
+                Checkbox(
+                  value: job.types.contains(t),
+                  activeColor: Colors.blueAccent,
+                  onChanged: (v) => setState(() => v! ? job.types.add(t) : job.types.remove(t)),
+                ),
+                Text(t.toUpperCase(), style: const TextStyle(fontSize: 12)),
+                const SizedBox(width: 10),
+              ],
+            )).toList(),
+          )
         ],
       ),
     );
   }
 
-  Widget _buildTypeCheck(String label, String type, DownloadJob job) {
-    bool isSelected = job.types.contains(type);
-    return Padding(
-      padding: const EdgeInsets.only(right: 20),
-      child: InkWell(
-        onTap: () {
-          setState(() {
-            if (isSelected) {
-              job.types.remove(type);
-            } else {
-              job.types.add(type);
-            }
-          });
-        },
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              isSelected ? Icons.check_box : Icons.check_box_outline_blank,
-              color: isSelected ? Colors.blueAccent : Colors.grey,
-              size: 20,
-            ),
-            const SizedBox(width: 8),
-            Text(label, style: TextStyle(color: isSelected ? Colors.white : Colors.grey, fontSize: 14)),
-          ],
-        ),
+  Widget _input(String label, Function(String) onCh) {
+    return TextField(
+      onChanged: onCh,
+      style: const TextStyle(fontSize: 13),
+      decoration: InputDecoration(
+        labelText: label, labelStyle: const TextStyle(color: Colors.grey, fontSize: 11),
+        filled: true, fillColor: const Color(0xFF1A2335),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
       ),
     );
   }
 
-  Widget _buildTextField({required String label, required String hint, required Function(String) onChanged}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 11, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
-        TextField(
-          onChanged: onChanged,
-          style: const TextStyle(fontSize: 14),
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: const TextStyle(color: Colors.white24),
-            filled: true,
-            fillColor: Colors.black.withOpacity(0.2),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.white.withOpacity(0.05))),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.blueAccent, width: 1)),
-          ),
-        ),
-      ],
+  Widget _sectionCard({required String title, required Widget child}) {
+    return Container(
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(color: const Color(0xFF161D2D), borderRadius: BorderRadius.circular(15), border: Border.all(color: Colors.blueAccent.withOpacity(0.1))),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 12)),
+          const SizedBox(height: 10),
+          child,
+        ],
+      ),
     );
   }
 }
