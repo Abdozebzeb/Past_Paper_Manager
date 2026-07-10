@@ -17,19 +17,27 @@ class LibraryProvider extends ChangeNotifier {
   }
 
   void setSelection({String? sub, String? ser, String? yr, String? ty, String? p}) {
-    if (sub != null) subject = sub;
-    if (ser != null) series = ser;
-    if (yr != null) year = yr;
-    if (ty != null) type = ty;
-    if (p != null) paper = p;
+    
+    if (sub != null && sub != subject) {
+      subject = sub;
+      series = year = type = paper = null;
+    } else if (ser != null && ser != series) {
+      series = ser;
+      year = type = paper = null;
+    } else if (yr != null && yr != year) {
+      year = yr;
+      type = paper = null;
+    } else if (ty != null && ty != type) {
+      type = ty;
+      paper = null;
+    } else if (p != null) {
+      paper = p;
+    }
     notifyListeners();
   }
 
-  void clearSelectionsDownFrom(String level) {
-    if (level == 'subject') { series = year = type = paper = null; }
-    if (level == 'series') { year = type = paper = null; }
-    if (level == 'year') { type = paper = null; }
-    if (level == 'type') { paper = null; }
+  void clearAll() {
+    subject = series = year = type = paper = null;
     notifyListeners();
   }
 }

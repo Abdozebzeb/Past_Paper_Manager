@@ -5,6 +5,7 @@ import '../../logic/file_scanner.dart';
 import '../../logic/filter_logic.dart';
 import '../../logic/paper_model.dart';
 import '../../logic/reader_controller.dart';
+import '../../logic/library_provider.dart';
 import '../../services/folder_service.dart';
 import '../../services/analytics_service.dart';
 
@@ -15,37 +16,30 @@ class ViewPapersPage extends StatefulWidget {
 }
 
 class _ViewPapersPageState extends State<ViewPapersPage> {
-  List<Paper> papers = [];
-  String folderPath = "";
-  String? subject, series, year, type, paper;
-
   @override
   void initState() {
     super.initState();
-    _refresh();
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<LibraryProvider>(context, listen: false).refreshFiles();
+    });
   }
 
-  void _refresh() async {
-    final path = await FolderService.getPastPapersPath();
-    if (mounted) {
-      setState(() {
-        folderPath = path;
-        papers = FileScanner.scan(path);
-      });
-    }
-  }
-
-  Future<void> _openPaperLogic(String sub, String ser, String yr, String ty, String? p) async {
+  Future<void> _openPaperLogic(LibraryProvider lib, String? p) async {
     try {
-      final match = papers.firstWhere((item) =>
-          item.subject == sub &&
-          item.series == ser &&
-          item.year == yr &&
-          item.type == ty &&
-          (ty == "gt" || item.paper == p));
+      final match = lib.papers.firstWhere((item) =>
+          item.subject == lib.subject &&
+          item.series == lib.series &&
+          item.year == lib.year &&
+          item.type == lib.type &&
+          (lib.type == "gt" || item.paper == p));
       
       final fileName = match.path.split(Platform.pathSeparator).last;
-      Provider.of<ReaderController>(context, listen: false).openFile(fileName, match.path);
+      
+      
+      final reader = Provider.of<ReaderController>(context, listen: false);
+      reader.openFile(fileName, match.path);
+      reader.setMenuIndex(2); 
       
       final analytics = AnalyticsService();
       String? uid = await analytics.getStoredUserId();
@@ -60,9 +54,11 @@ class _ViewPapersPageState extends State<ViewPapersPage> {
 
   @override
   Widget build(BuildContext context) {
-    final subjects = FilterLogic.getSubjects(papers);
-    bool isComplete = (subject != null && series != null && year != null && type != null) &&
-        (type == "gt" || paper != null);
+    final lib = Provider.of<LibraryProvider>(context);
+    final subjects = FilterLogic.getSubjects(lib.papers);
+    
+    bool isComplete = (lib.subject != null && lib.series != null && lib.year != null && lib.type != null) &&
+        (lib.type == "gt" || lib.paper != null);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -70,14 +66,11 @@ class _ViewPapersPageState extends State<ViewPapersPage> {
         title: const Text("Past Papers Library", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        centerTitle: false,
-        actions: const [], 
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(25),
         child: Column(
           children: [
-            
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(25),
@@ -87,22 +80,19 @@ class _ViewPapersPageState extends State<ViewPapersPage> {
                 border: Border.all(color: Colors.blueAccent.withOpacity(0.1)),
               ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start, 
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text("Filter Papers", style: TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 14)),
                   const SizedBox(height: 25),
-                  
                   Center(
                     child: Wrap(
-                      spacing: 12,
-                      runSpacing: 15,
-                      alignment: WrapAlignment.center, 
+                      spacing: 12, runSpacing: 15, alignment: WrapAlignment.center, 
                       children: [
-                        _pill("Subject", subject, subjects, (v) => setState(() { subject = v; series = year = type = paper = null; })),
-                        if (subject != null) _pill("Series", series, FilterLogic.getSeries(papers, subject!), (v) => setState(() { series = v; year = type = paper = null; })),
-                        if (series != null) _pill("Year", year, FilterLogic.getYears(papers, subject!, series!), (v) => setState(() { year = v; type = paper = null; })),
-                        if (year != null) _pill("Type", type, FilterLogic.getTypes(papers, subject!, series!, year!), (v) => setState(() { type = v; paper = null; })),
-                        if (type != null && type != "gt") _pill("Paper", paper, FilterLogic.getPapers(papers, subject!, series!, year!, type!), (v) => setState(() => paper = v)),
+                        _pill("Subject", lib.subject, subjects, (v) => lib.setSelection(sub: v)),
+                        if (lib.subject != null) _pill("Series", lib.series, FilterLogic.getSeries(lib.papers, lib.subject!), (v) => lib.setSelection(ser: v)),
+                        if (lib.series != null) _pill("Year", lib.year, FilterLogic.getYears(lib.papers, lib.subject!, lib.series!), (v) => lib.setSelection(yr: v)),
+                        if (lib.year != null) _pill("Type", lib.type, FilterLogic.getTypes(lib.papers, lib.subject!, lib.series!, lib.year!), (v) => lib.setSelection(ty: v)),
+                        if (lib.type != null && lib.type != "gt") _pill("Paper", lib.paper, FilterLogic.getPapers(lib.papers, lib.subject!, lib.series!, lib.year!, lib.type!), (v) => lib.setSelection(p: v)),
                       ],
                     ),
                   ),
@@ -120,24 +110,21 @@ class _ViewPapersPageState extends State<ViewPapersPage> {
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)), 
                               elevation: 0,
                             ),
-                            onPressed: isComplete ? () => _openPaperLogic(subject!, series!, year!, type!, paper) : null,
+                            onPressed: isComplete ? () => _openPaperLogic(lib, lib.paper) : null,
                             child: const Text("Open Paper", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                           ),
                         ),
                       ),
                       if (isComplete) ...[
                         const SizedBox(width: 12),
-                        _moreOptionsButton(),
+                        _moreOptionsButton(lib),
                       ]
                     ],
                   ),
                 ],
               ),
             ),
-            
             const SizedBox(height: 25),
-
-            
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -148,32 +135,25 @@ class _ViewPapersPageState extends State<ViewPapersPage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _statItem("Total Files", papers.length.toString()),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      const Text("Storage", style: TextStyle(color: Colors.grey, fontSize: 11)),
-                      const SizedBox(height: 8),
-                      InkWell(
-                        onTap: () => FolderService.openFolder(folderPath),
+                  _statItem("Total Files", lib.papers.length.toString()),
+                  InkWell(
+                    onTap: () => FolderService.openFolder(lib.folderPath),
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.blueAccent.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(10),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.blueAccent.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: Colors.blueAccent.withOpacity(0.3)),
-                          ),
-                          child: const Row(
-                            children: [
-                              Icon(Icons.folder_open, size: 16, color: Colors.blueAccent),
-                              SizedBox(width: 8),
-                              Text("Past Papers", style: TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 12)),
-                            ],
-                          ),
-                        ),
+                        border: Border.all(color: Colors.blueAccent.withOpacity(0.3)),
                       ),
-                    ],
+                      child: const Row(
+                        children: [
+                          Icon(Icons.folder_open, size: 16, color: Colors.blueAccent),
+                          SizedBox(width: 8),
+                          Text("Past Papers", style: TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 12)),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -184,17 +164,17 @@ class _ViewPapersPageState extends State<ViewPapersPage> {
     );
   }
 
-  Widget _moreOptionsButton() {
+  Widget _moreOptionsButton(LibraryProvider lib) {
     return Container(
       height: 55, width: 55,
       decoration: BoxDecoration(color: Colors.blueAccent, borderRadius: BorderRadius.circular(14)),
       child: PopupMenuButton<String>(
         icon: const Icon(Icons.arrow_drop_down, color: Colors.white, size: 30),
-        onSelected: (val) => _openPaperLogic(subject!, series!, year!, val, paper),
+        onSelected: (val) => _openPaperLogic(lib, val == "gt" ? null : lib.paper),
         itemBuilder: (context) => [
-          if (type != "qp") const PopupMenuItem(value: "qp", child: Text("Open Question Paper")),
-          if (type != "ms") const PopupMenuItem(value: "ms", child: Text("Open Marking Scheme")),
-          if (type != "gt") const PopupMenuItem(value: "gt", child: Text("Open Grade Threshold")),
+          if (lib.type != "qp") const PopupMenuItem(value: "qp", child: Text("Open Question Paper")),
+          if (lib.type != "ms") const PopupMenuItem(value: "ms", child: Text("Open Marking Scheme")),
+          if (lib.type != "gt") const PopupMenuItem(value: "gt", child: Text("Open Grade Threshold")),
         ],
       ),
     );

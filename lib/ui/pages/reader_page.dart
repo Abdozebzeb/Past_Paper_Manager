@@ -8,30 +8,16 @@ import '../../logic/reader_controller.dart';
 
 class ReaderPage extends StatefulWidget {
   const ReaderPage({super.key});
-
   @override
   State<ReaderPage> createState() => _ReaderPageState();
 }
 
 class _ReaderPageState extends State<ReaderPage> {
-  final PdfViewerController _pdfViewerController = PdfViewerController();
-  
-  
-  
-  
   double _virtualZoom = 0.8;
 
   void _updateZoom(double newZoom) {
     setState(() {
-      _virtualZoom = newZoom.clamp(0.3, 5.0); 
-      
-      
-      if (_virtualZoom >= 1.0) {
-        _pdfViewerController.zoomLevel = _virtualZoom;
-      } else {
-        
-        _pdfViewerController.zoomLevel = 1.0;
-      }
+      _virtualZoom = newZoom.clamp(0.3, 5.0);
     });
   }
 
@@ -98,8 +84,6 @@ class _ReaderPageState extends State<ReaderPage> {
             onPointerSignal: _handlePointerSignal,
             child: LayoutBuilder(
               builder: (context, constraints) {
-                
-                
                 double viewerWidth = constraints.maxWidth;
                 if (_virtualZoom < 1.0) {
                   viewerWidth = constraints.maxWidth * _virtualZoom;
@@ -107,36 +91,34 @@ class _ReaderPageState extends State<ReaderPage> {
 
                 return Stack(
                   children: [
-                    
                     Container(color: Theme.of(context).scaffoldBackgroundColor),
-                    
-                    
                     Center(
                       child: SizedBox(
                         width: viewerWidth,
-                        height: constraints.maxHeight, 
+                        height: constraints.maxHeight,
                         child: IndexedStack(
-  index: reader.currentTabIndex,
-  children: reader.openFiles.map((file) {
-    
-    return SfPdfViewer.file(
-      File(file.path),
-      key: ValueKey(file.path), 
-      controller: _pdfViewerController,
-      enableDoubleTapZooming: true,
-      interactionMode: PdfInteractionMode.pan,
-    );
-  }).toList(),
-),
+                          index: reader.currentTabIndex,
+                          children: reader.openFiles.asMap().entries.map((entry) {
+                            int idx = entry.key;
+                            var file = entry.value;
+
+                            
+                            
+                            if (idx != reader.currentTabIndex) {
+                              return const SizedBox.shrink();
+                            }
+
+                            return SfPdfViewer.file(
+                              File(file.path),
+                              key: ValueKey(file.path),
+                              initialZoomLevel: _virtualZoom >= 1.0 ? _virtualZoom : 1.0,
+                              interactionMode: PdfInteractionMode.pan,
+                            );
+                          }).toList(),
+                        ),
                       ),
                     ),
-
-                    
-                    Positioned(
-                      right: 25,
-                      bottom: 25,
-                      child: _buildZoomCard(),
-                    ),
+                    Positioned(right: 25, bottom: 25, child: _buildZoomCard()),
                   ],
                 );
               },
@@ -163,10 +145,7 @@ class _ReaderPageState extends State<ReaderPage> {
             _zoomBtn(Icons.add, () => _updateZoom(_virtualZoom + 0.25)),
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Text(
-                "${(_virtualZoom * 100).round()}%",
-                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-              ),
+              child: Text("${(_virtualZoom * 100).round()}%", style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
             ),
             _zoomBtn(Icons.remove, () => _updateZoom(_virtualZoom - 0.25)),
             const Divider(height: 15, indent: 5, endIndent: 5),
@@ -183,7 +162,6 @@ class _ReaderPageState extends State<ReaderPage> {
       onPressed: onPressed,
       constraints: const BoxConstraints(minWidth: 38, minHeight: 38),
       padding: EdgeInsets.zero,
-      splashRadius: 20,
     );
   }
 }
