@@ -19,7 +19,7 @@ class ReaderPage extends StatelessWidget {
       children: [
         Container(
           height: 45,
-          color: const Color(0xFF161D2D), 
+          color: Theme.of(context).cardColor, 
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             itemCount: reader.openFiles.length,
@@ -31,19 +31,26 @@ class ReaderPage extends StatelessWidget {
                   margin: const EdgeInsets.only(left: 8, top: 5),
                   padding: const EdgeInsets.symmetric(horizontal: 15),
                   decoration: BoxDecoration(
-                    color: isSelected ? const Color(0xFF0A0F1C) : Colors.transparent,
+                    color: isSelected 
+                      ? Theme.of(context).scaffoldBackgroundColor 
+                      : Colors.transparent,
                     borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
                   ),
                   child: Row(
                     children: [
                       Text(reader.openFiles[index].name, 
-                        style: TextStyle(fontSize: 11, color: isSelected ? Colors.blueAccent : Colors.grey)),
+                        style: TextStyle(
+                          fontSize: 11, 
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          color: isSelected ? Colors.blueAccent : Colors.grey
+                        )),
                       const SizedBox(width: 10),
                       IconButton(
                         onPressed: () => reader.closeTab(index),
                         icon: const Icon(Icons.close, size: 14),
                         constraints: const BoxConstraints(),
                         padding: EdgeInsets.zero,
+                        color: isSelected ? Colors.blueAccent : Colors.grey,
                       )
                     ],
                   ),
