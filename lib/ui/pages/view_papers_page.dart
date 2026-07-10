@@ -15,9 +15,14 @@ class ViewPapersPage extends StatefulWidget {
 }
 
 class _ViewPapersPageState extends State<ViewPapersPage> {
+  // Mapping internal codes to user-friendly names
   final Map<String, String> _displayNames = {
-    's': 'Summer', 'w': 'Winter', 'm': 'March',
-    'qp': 'Question Paper', 'ms': 'Marking Scheme', 'gt': 'Grading Threshold'
+    's': 'Summer', 
+    'w': 'Winter', 
+    'm': 'March',
+    'qp': 'Question Paper', 
+    'ms': 'Marking Scheme', 
+    'gt': 'Grading Threshold'
   };
 
   @override
@@ -28,10 +33,11 @@ class _ViewPapersPageState extends State<ViewPapersPage> {
     });
   }
 
-  Future<void> _openPaperLogic(LibraryProvider lib, {String? overrideType, String? overridePaper}) async {
+  Future<void> _openPaperLogic(LibraryProvider lib, {String? overrideType}) async {
     try {
       final targetType = overrideType ?? lib.type;
-      final targetPaper = (targetType == "gt") ? null : (overridePaper ?? lib.paper);
+      // If we are opening a Grading Threshold, we don't look for a specific paper number (e.g. _22)
+      final targetPaper = (targetType == "gt") ? null : lib.paper;
 
       final match = lib.papers.firstWhere((item) =>
           item.subject == lib.subject &&
@@ -43,7 +49,9 @@ class _ViewPapersPageState extends State<ViewPapersPage> {
       final fileName = match.path.split(Platform.pathSeparator).last;
       Provider.of<ReaderController>(context, listen: false).openFile(fileName, match.path);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("File not found: ${overrideType?.toUpperCase() ?? 'Paper'}")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("File not found: ${_displayNames[overrideType] ?? 'Paper'}"))
+      );
     }
   }
 
@@ -51,18 +59,29 @@ class _ViewPapersPageState extends State<ViewPapersPage> {
   Widget build(BuildContext context) {
     final lib = Provider.of<LibraryProvider>(context);
     final subjects = FilterLogic.getSubjects(lib.papers);
-    bool isComplete = (lib.subject != null && lib.series != null && lib.year != null && lib.type != null) && (lib.type == "gt" || lib.paper != null);
+    
+    bool isComplete = (lib.subject != null && lib.series != null && lib.year != null && lib.type != null) && 
+                      (lib.type == "gt" || lib.paper != null);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppBar(title: const Text("Past Papers Library", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)), backgroundColor: Colors.transparent, elevation: 0),
+      appBar: AppBar(
+        title: const Text("Past Papers Library", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)), 
+        backgroundColor: Colors.transparent, 
+        elevation: 0
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(25),
         child: Column(
           children: [
+            // --- FILTER CARD ---
             Container(
               width: double.infinity, padding: const EdgeInsets.all(25),
-              decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.blueAccent.withOpacity(0.1))),
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardColor, 
+                borderRadius: BorderRadius.circular(20), 
+                border: Border.all(color: Colors.blueAccent.withOpacity(0.1))
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -86,13 +105,21 @@ class _ViewPapersPageState extends State<ViewPapersPage> {
                       Expanded(
                         child: SizedBox(height: 55, 
                           child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)), elevation: 0),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blueAccent, 
+                              foregroundColor: Colors.white, 
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)), 
+                              elevation: 0
+                            ),
                             onPressed: isComplete ? () => _openPaperLogic(lib) : null,
                             child: const Text("Open Paper", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                           ),
                         ),
                       ),
-                      if (isComplete) ...[const SizedBox(width: 12), _moreOptionsButton(lib)]
+                      if (isComplete) ...[
+                        const SizedBox(width: 12), 
+                        _moreOptionsButton(lib)
+                      ]
                     ],
                   ),
                 ],
@@ -114,9 +141,13 @@ class _ViewPapersPageState extends State<ViewPapersPage> {
         icon: const Icon(Icons.arrow_drop_down, color: Colors.white, size: 30),
         onSelected: (val) => _openPaperLogic(lib, overrideType: val),
         itemBuilder: (context) => [
-          const PopupMenuItem(value: "qp", child: Text("Open Question Paper")),
-          const PopupMenuItem(value: "ms", child: Text("Open Marking Scheme")),
-          const PopupMenuItem(value: "gt", child: Text("Open Grade Threshold")),
+          // Logic: Only show the option if it is NOT the currently selected type in the dropdown
+          if (lib.type != "qp") 
+            const PopupMenuItem(value: "qp", child: Text("Open Question Paper")),
+          if (lib.type != "ms") 
+            const PopupMenuItem(value: "ms", child: Text("Open Marking Scheme")),
+          if (lib.type != "gt") 
+            const PopupMenuItem(value: "gt", child: Text("Open Grade Threshold")),
         ],
       ),
     );
@@ -125,12 +156,20 @@ class _ViewPapersPageState extends State<ViewPapersPage> {
   Widget _pill(String label, String? val, List<String> items, Function(String) onCh) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(color: Colors.blueAccent.withOpacity(0.05), borderRadius: BorderRadius.circular(30), border: Border.all(color: Colors.blueAccent.withOpacity(0.2))),
+      decoration: BoxDecoration(
+        color: Colors.blueAccent.withOpacity(0.05), 
+        borderRadius: BorderRadius.circular(30), 
+        border: Border.all(color: Colors.blueAccent.withOpacity(0.2))
+      ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
-          value: val, hint: Text(label, style: const TextStyle(color: Colors.grey, fontSize: 13)),
+          value: val, 
+          hint: Text(label, style: const TextStyle(color: Colors.grey, fontSize: 13)),
           dropdownColor: Theme.of(context).cardColor,
-          items: items.map((e) => DropdownMenuItem(value: e, child: Text(_displayNames[e] ?? e))).toList(),
+          items: items.map((e) => DropdownMenuItem(
+            value: e, 
+            child: Text(_displayNames[e] ?? e)
+          )).toList(),
           onChanged: (val) => onCh(val!),
         ),
       ),
@@ -140,15 +179,34 @@ class _ViewPapersPageState extends State<ViewPapersPage> {
   Widget _infoCard(LibraryProvider lib) {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.blueAccent.withOpacity(0.1))),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor, 
+        borderRadius: BorderRadius.circular(20), 
+        border: Border.all(color: Colors.blueAccent.withOpacity(0.1))
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const Text("Total Files", style: TextStyle(color: Colors.grey, fontSize: 11)), const SizedBox(height: 4), Text(lib.papers.length.toString(), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold))]),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start, 
+            children: [
+              const Text("Total Files", style: TextStyle(color: Colors.grey, fontSize: 11)), 
+              const SizedBox(height: 4), 
+              Text(lib.papers.length.toString(), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold))
+            ]
+          ),
           InkWell(
             onTap: () => FolderService.openFolder(lib.folderPath),
-            child: Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), decoration: BoxDecoration(color: Colors.blueAccent.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
-              child: const Row(children: [Icon(Icons.folder_open, size: 16, color: Colors.blueAccent), SizedBox(width: 8), Text("Past Papers", style: TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 12))]),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), 
+              decoration: BoxDecoration(color: Colors.blueAccent.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+              child: const Row(
+                children: [
+                  Icon(Icons.folder_open, size: 16, color: Colors.blueAccent), 
+                  SizedBox(width: 8), 
+                  Text("Past Papers", style: TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 12))
+                ]
+              ),
             ),
           ),
         ],
