@@ -8,30 +8,16 @@ import '../../logic/reader_controller.dart';
 
 class ReaderPage extends StatefulWidget {
   const ReaderPage({super.key});
-
   @override
   State<ReaderPage> createState() => _ReaderPageState();
 }
 
 class _ReaderPageState extends State<ReaderPage> {
-  final PdfViewerController _pdfViewerController = PdfViewerController();
-  
-  // 1.0 = Full Width (A4 fits the screen width)
-  // Below 1.0 = We shrink the width to create side margins
-  // Above 1.0 = We use the PDF engine to zoom in on text
   double _virtualZoom = 0.8;
 
   void _updateZoom(double newZoom) {
     setState(() {
-      _virtualZoom = newZoom.clamp(0.3, 5.0); // Minimum 30% width
-      
-      // If we are zooming into the paper, use the internal PDF engine
-      if (_virtualZoom >= 1.0) {
-        _pdfViewerController.zoomLevel = _virtualZoom;
-      } else {
-        // If we are zooming out to see the "paper" shape, lock engine at 1.0
-        _pdfViewerController.zoomLevel = 1.0;
-      }
+      _virtualZoom = newZoom.clamp(0.3, 5.0);
     });
   }
 
@@ -98,8 +84,6 @@ class _ReaderPageState extends State<ReaderPage> {
             onPointerSignal: _handlePointerSignal,
             child: LayoutBuilder(
               builder: (context, constraints) {
-                // Calculate width: if zoom < 1.0, narrow the container.
-                // This creates the "A4 paper sitting in the middle" effect.
                 double viewerWidth = constraints.maxWidth;
                 if (_virtualZoom < 1.0) {
                   viewerWidth = constraints.maxWidth * _virtualZoom;
@@ -107,36 +91,34 @@ class _ReaderPageState extends State<ReaderPage> {
 
                 return Stack(
                   children: [
-                    // Grey background for the "Desktop" area behind the paper
                     Container(color: Theme.of(context).scaffoldBackgroundColor),
-                    
-                    // Centered PDF Paper
                     Center(
                       child: SizedBox(
                         width: viewerWidth,
-                        height: constraints.maxHeight, // Keep height full
+                        height: constraints.maxHeight,
                         child: IndexedStack(
-  index: reader.currentTabIndex,
-  children: reader.openFiles.map((file) {
-    // Adding a UniqueKey ensures Flutter recreates the viewer for different files
-    return SfPdfViewer.file(
-      File(file.path),
-      key: ValueKey(file.path), // CRITICAL FIX
-      controller: _pdfViewerController,
-      enableDoubleTapZooming: true,
-      interactionMode: PdfInteractionMode.pan,
-    );
-  }).toList(),
-),
+                          index: reader.currentTabIndex,
+                          children: reader.openFiles.asMap().entries.map((entry) {
+                            int idx = entry.key;
+                            var file = entry.value;
+
+                            // PERFORMANCE FIX: Only build the PDF viewer if it's the active tab
+                            // Otherwise, return a placeholder to prevent memory/loading locks.
+                            if (idx != reader.currentTabIndex) {
+                              return const SizedBox.shrink();
+                            }
+
+                            return SfPdfViewer.file(
+                              File(file.path),
+                              key: ValueKey(file.path),
+                              initialZoomLevel: _virtualZoom >= 1.0 ? _virtualZoom : 1.0,
+                              interactionMode: PdfInteractionMode.pan,
+                            );
+                          }).toList(),
+                        ),
                       ),
                     ),
-
-                    // --- ZOOM CONTROLS ---
-                    Positioned(
-                      right: 25,
-                      bottom: 25,
-                      child: _buildZoomCard(),
-                    ),
+                    Positioned(right: 25, bottom: 25, child: _buildZoomCard()),
                   ],
                 );
               },
@@ -163,10 +145,7 @@ class _ReaderPageState extends State<ReaderPage> {
             _zoomBtn(Icons.add, () => _updateZoom(_virtualZoom + 0.25)),
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Text(
-                "${(_virtualZoom * 100).round()}%",
-                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-              ),
+              child: Text("${(_virtualZoom * 100).round()}%", style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
             ),
             _zoomBtn(Icons.remove, () => _updateZoom(_virtualZoom - 0.25)),
             const Divider(height: 15, indent: 5, endIndent: 5),
@@ -183,7 +162,6 @@ class _ReaderPageState extends State<ReaderPage> {
       onPressed: onPressed,
       constraints: const BoxConstraints(minWidth: 38, minHeight: 38),
       padding: EdgeInsets.zero,
-      splashRadius: 20,
     );
   }
 }

@@ -13,14 +13,7 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  void switchToReader() {
-  setState(() {
-    _selectedIndex = 2; // Index of ReaderPage
-  });
-}
-  int _selectedIndex = 0;
-
-  Widget _getPage(int index, int readerIndex) {
+  Widget _getPage(int index) {
     switch (index) {
       case 0: return const ViewPapersPage();
       case 1: return const DownloadPage();
@@ -34,6 +27,7 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     final reader = Provider.of<ReaderController>(context);
     bool hasTabs = reader.openFiles.isNotEmpty;
+    int currentIndex = reader.mainMenuIndex;
 
     return Scaffold(
       body: Row(
@@ -44,35 +38,44 @@ class _MainScreenState extends State<MainScreen> {
             child: Column(
               children: [
                 const SizedBox(height: 20),
-                _navItem(Icons.library_books, 0, "Library"),
-                _navItem(Icons.cloud_download, 1, "Download"),
+                _navItem(Icons.library_books, 0, "Library", reader),
+                _navItem(Icons.cloud_download, 1, "Download", reader),
                 const Spacer(),
-                if (hasTabs) _navItem(Icons.menu_book, 2, "Reader", badge: reader.openFiles.length),
-                _navItem(Icons.settings, 3, "Settings"),
+                if (hasTabs) _navItem(Icons.menu_book, 2, "Reader", reader, badge: reader.openFiles.length),
+                _navItem(Icons.settings, 3, "Settings", reader),
                 const SizedBox(height: 20),
               ],
             ),
           ),
           const VerticalDivider(width: 1, thickness: 1),
-          Expanded(child: _getPage(_selectedIndex, 2)),
+          Expanded(child: _getPage(currentIndex)),
         ],
       ),
     );
   }
 
-  Widget _navItem(IconData icon, int index, String label, {int? badge}) {
-    bool isSelected = _selectedIndex == index;
+  Widget _navItem(IconData icon, int index, String label, ReaderController reader, {int? badge}) {
+    bool isSelected = reader.mainMenuIndex == index;
     return GestureDetector(
-      onTap: () => setState(() => _selectedIndex = index),
+      onTap: () => reader.setMenuIndex(index),
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 10),
+        width: double.infinity,
+        color: Colors.transparent,
         child: Column(
           children: [
             Stack(
               children: [
                 Icon(icon, color: isSelected ? Colors.blueAccent : Colors.grey, size: 28),
                 if (badge != null && badge > 0)
-                  Positioned(right: 0, child: CircleAvatar(radius: 7, backgroundColor: Colors.red, child: Text(badge.toString(), style: const TextStyle(fontSize: 9)))),
+                  Positioned(
+                    right: 0, 
+                    child: CircleAvatar(
+                      radius: 7, 
+                      backgroundColor: Colors.red, 
+                      child: Text(badge.toString(), style: const TextStyle(fontSize: 9, color: Colors.white))
+                    )
+                  ),
               ],
             ),
             Text(label, style: TextStyle(fontSize: 10, color: isSelected ? Colors.blueAccent : Colors.grey)),
