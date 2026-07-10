@@ -7,7 +7,6 @@ class LibraryProvider extends ChangeNotifier {
   List<Paper> papers = [];
   String folderPath = "";
 
-  // Selection State (Moved here to persist across page changes)
   String? subject, series, year, type, paper;
 
   Future<void> refreshFiles() async {
@@ -17,27 +16,19 @@ class LibraryProvider extends ChangeNotifier {
   }
 
   void setSelection({String? sub, String? ser, String? yr, String? ty, String? p}) {
-    // Logic to clear lower levels if a higher level changes
-    if (sub != null && sub != subject) {
-      subject = sub;
-      series = year = type = paper = null;
-    } else if (ser != null && ser != series) {
-      series = ser;
-      year = type = paper = null;
-    } else if (yr != null && yr != year) {
-      year = yr;
-      type = paper = null;
-    } else if (ty != null && ty != type) {
-      type = ty;
-      paper = null;
-    } else if (p != null) {
-      paper = p;
+    if (sub != null) {
+      if (subject != sub) { subject = sub; series = year = type = paper = null; }
     }
-    notifyListeners();
-  }
-
-  void clearAll() {
-    subject = series = year = type = paper = null;
+    if (ser != null) {
+      if (series != ser) { series = ser; year = type = paper = null; }
+    }
+    if (yr != null) {
+      if (year != yr) { year = yr; type = paper = null; }
+    }
+    if (ty != null) {
+      if (type != ty) { type = ty; paper = null; }
+    }
+    if (p != null) paper = p;
     notifyListeners();
   }
 }
