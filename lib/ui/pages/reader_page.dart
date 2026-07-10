@@ -13,30 +13,19 @@ class ReaderPage extends StatefulWidget {
 }
 
 class _ReaderPageState extends State<ReaderPage> {
-  double _virtualZoom = 0.8;
-
-  void _updateZoom(double newZoom) {
-    setState(() {
-      _virtualZoom = newZoom.clamp(0.3, 5.0);
-    });
-  }
-
-  void _handlePointerSignal(PointerSignalEvent event) {
-    if (event is PointerScrollEvent) {
-      if (HardwareKeyboard.instance.isControlPressed) {
-        double delta = event.scrollDelta.dy < 0 ? 0.1 : -0.1;
-        _updateZoom(_virtualZoom + delta);
-      }
+  void _handleScrollZoom(PointerSignalEvent event, ReaderController reader) {
+    if (event is PointerScrollEvent && HardwareKeyboard.instance.isControlPressed) {
+      double delta = event.scrollDelta.dy < 0 ? 0.1 : -0.1;
+      reader.updateZoom(reader.currentTabIndex, reader.openFiles[reader.currentTabIndex].zoom + delta);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final reader = Provider.of<ReaderController>(context);
+    if (reader.openFiles.isEmpty) return const Center(child: Text("No papers are currently open."));
 
-    if (reader.openFiles.isEmpty) {
-      return const Center(child: Text("No papers are currently open."));
-    }
+    final currentFile = reader.openFiles[reader.currentTabIndex];
 
     return Column(
       children: [
@@ -60,16 +49,9 @@ class _ReaderPageState extends State<ReaderPage> {
                   ),
                   child: Row(
                     children: [
-                      Text(reader.openFiles[index].name,
-                        style: TextStyle(fontSize: 11, color: isSelected ? Colors.blueAccent : Colors.grey, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal),
-                      ),
+                      Text(reader.openFiles[index].name, style: TextStyle(fontSize: 11, color: isSelected ? Colors.blueAccent : Colors.grey, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
                       const SizedBox(width: 10),
-                      IconButton(
-                        onPressed: () => reader.closeTab(index),
-                        icon: const Icon(Icons.close, size: 14),
-                        constraints: const BoxConstraints(),
-                        padding: EdgeInsets.zero,
-                      ),
+                      IconButton(onPressed: () => reader.closeTab(index), icon: const Icon(Icons.close, size: 14), constraints: const BoxConstraints(), padding: EdgeInsets.zero),
                     ],
                   ),
                 ),
@@ -81,44 +63,59 @@ class _ReaderPageState extends State<ReaderPage> {
         
         Expanded(
           child: Listener(
-            onPointerSignal: _handlePointerSignal,
+            onPointerSignal: (e) => _handleScrollZoom(e, reader),
             child: LayoutBuilder(
               builder: (context, constraints) {
-                double viewerWidth = constraints.maxWidth;
-                if (_virtualZoom < 1.0) {
-                  viewerWidth = constraints.maxWidth * _virtualZoom;
-                }
-
                 return Stack(
                   children: [
                     Container(color: Theme.of(context).scaffoldBackgroundColor),
-                    Center(
-                      child: SizedBox(
-                        width: viewerWidth,
-                        height: constraints.maxHeight,
-                        child: IndexedStack(
-                          index: reader.currentTabIndex,
-                          children: reader.openFiles.asMap().entries.map((entry) {
-                            int idx = entry.key;
-                            var file = entry.value;
+                    
+                    
+                    IndexedStack(
+                      index: reader.currentTabIndex,
+                      children: reader.openFiles.asMap().entries.map((entry) {
+                        int idx = entry.key;
+                        var file = entry.value;
 
-                            
-                            
-                            if (idx != reader.currentTabIndex) {
-                              return const SizedBox.shrink();
-                            }
+                        
+                        double viewerWidth = constraints.maxWidth;
+                        if (file.zoom < 1.0) viewerWidth = constraints.maxWidth * file.zoom;
 
-                            return SfPdfViewer.file(
+                        return Center(
+                          child: SizedBox(
+                            width: viewerWidth,
+                            height: constraints.maxHeight,
+                            child: SfPdfViewer.file(
                               File(file.path),
                               key: ValueKey(file.path),
-                              initialZoomLevel: _virtualZoom >= 1.0 ? _virtualZoom : 1.0,
+                              controller: file.controller,
                               interactionMode: PdfInteractionMode.pan,
-                            );
-                          }).toList(),
+                              onPageChanged: (details) => reader.updatePageInfo(idx, details.newPageNumber, 0),
+                              onDocumentLoaded: (details) => reader.updatePageInfo(idx, 1, details.document.pages.count),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+
+                    
+                    Positioned(
+                      left: 20, bottom: 20,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(20)),
+                        child: Text(
+                          "${currentFile.currentPage} / ${currentFile.totalPages}",
+                          style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ),
-                    Positioned(right: 25, bottom: 25, child: _buildZoomCard()),
+
+                    
+                    Positioned(
+                      right: 25, bottom: 25,
+                      child: _buildZoomCard(reader, currentFile),
+                    ),
                   ],
                 );
               },
@@ -129,7 +126,7 @@ class _ReaderPageState extends State<ReaderPage> {
     );
   }
 
-  Widget _buildZoomCard() {
+  Widget _buildZoomCard(ReaderController reader, OpenedFile file) {
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
@@ -142,14 +139,11 @@ class _ReaderPageState extends State<ReaderPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _zoomBtn(Icons.add, () => _updateZoom(_virtualZoom + 0.25)),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Text("${(_virtualZoom * 100).round()}%", style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-            ),
-            _zoomBtn(Icons.remove, () => _updateZoom(_virtualZoom - 0.25)),
+            _zoomBtn(Icons.add, () => reader.updateZoom(reader.currentTabIndex, file.zoom + 0.25)),
+            Padding(padding: const EdgeInsets.symmetric(vertical: 4), child: Text("${(file.zoom * 100).round()}%", style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold))),
+            _zoomBtn(Icons.remove, () => reader.updateZoom(reader.currentTabIndex, file.zoom - 0.25)),
             const Divider(height: 15, indent: 5, endIndent: 5),
-            _zoomBtn(Icons.settings_backup_restore, () => _updateZoom(0.8)),
+            _zoomBtn(Icons.settings_backup_restore, () => reader.updateZoom(reader.currentTabIndex, 0.8)),
           ],
         ),
       ),
@@ -157,11 +151,6 @@ class _ReaderPageState extends State<ReaderPage> {
   }
 
   Widget _zoomBtn(IconData icon, VoidCallback onPressed) {
-    return IconButton(
-      icon: Icon(icon, size: 20, color: Colors.blueAccent),
-      onPressed: onPressed,
-      constraints: const BoxConstraints(minWidth: 38, minHeight: 38),
-      padding: EdgeInsets.zero,
-    );
+    return IconButton(icon: Icon(icon, size: 20, color: Colors.blueAccent), onPressed: onPressed, constraints: const BoxConstraints(minWidth: 38, minHeight: 38), padding: EdgeInsets.zero);
   }
 }
