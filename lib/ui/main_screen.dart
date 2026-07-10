@@ -13,6 +13,11 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
+  void switchToReader() {
+  setState(() {
+    _selectedIndex = 2; 
+  });
+}
   int _selectedIndex = 0;
 
   Widget _getPage(int index, int readerIndex) {

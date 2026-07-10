@@ -116,16 +116,18 @@ class _ReaderPageState extends State<ReaderPage> {
                         width: viewerWidth,
                         height: constraints.maxHeight, 
                         child: IndexedStack(
-                          index: reader.currentTabIndex,
-                          children: reader.openFiles.map((file) {
-                            return SfPdfViewer.file(
-                              File(file.path),
-                              controller: _pdfViewerController,
-                              enableDoubleTapZooming: true,
-                              interactionMode: PdfInteractionMode.pan,
-                            );
-                          }).toList(),
-                        ),
+  index: reader.currentTabIndex,
+  children: reader.openFiles.map((file) {
+    
+    return SfPdfViewer.file(
+      File(file.path),
+      key: ValueKey(file.path), 
+      controller: _pdfViewerController,
+      enableDoubleTapZooming: true,
+      interactionMode: PdfInteractionMode.pan,
+    );
+  }).toList(),
+),
                       ),
                     ),
 
