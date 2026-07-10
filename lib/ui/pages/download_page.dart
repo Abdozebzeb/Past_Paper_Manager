@@ -63,51 +63,53 @@ class _DownloadPageState extends State<DownloadPage> {
 
           const SizedBox(height: 30),
           
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: _sectionCard(
-                  title: "Progress",
-                  child: Column(
-                    children: [
-                      LinearProgressIndicator(
-                        value: controller.progress,
-                        backgroundColor: Theme.of(context).dividerColor.withOpacity(0.1),
-                        minHeight: 8,
-                        borderRadius: BorderRadius.circular(10),
-                        color: controller.progress >= 1.0 ? Colors.green : Colors.blueAccent,
-                      ),
-                      const SizedBox(height: 10),
-                      Text("${(controller.progress * 100).toStringAsFixed(0)}%", 
-                        style: TextStyle(fontWeight: FontWeight.bold, color: controller.progress >= 1.0 ? Colors.green : Colors.blueAccent)),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 20),
-              Expanded(
-                child: _sectionCard(
-                  title: "Status Results",
-                  child: ExpansionTile(
-                    shape: const Border(),
-                    tilePadding: EdgeInsets.zero,
-                    title: Row(
+          
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: _sectionCard(
+                    title: "Progress",
+                    child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text("S: ${_successList.length}", style: const TextStyle(color: Colors.green, fontSize: 13, fontWeight: FontWeight.bold)),
-                        const SizedBox(width: 10),
-                        Text("F: ${_failedList.length}", style: const TextStyle(color: Colors.redAccent, fontSize: 13, fontWeight: FontWeight.bold)),
+                        LinearProgressIndicator(
+                          value: controller.progress,
+                          backgroundColor: Theme.of(context).dividerColor.withOpacity(0.1),
+                          minHeight: 8,
+                          borderRadius: BorderRadius.circular(10),
+                          color: controller.progress >= 1.0 ? Colors.green : Colors.blueAccent,
+                        ),
+                        const SizedBox(height: 10),
+                        Text("${(controller.progress * 100).toStringAsFixed(0)}%", 
+                          style: TextStyle(fontWeight: FontWeight.bold, color: controller.progress >= 1.0 ? Colors.green : Colors.blueAccent)),
                       ],
                     ),
-                    children: [
-                      _copyButton("Failed", _failedList, Colors.redAccent),
-                      _copyButton("Success", _successList, Colors.green),
-                    ],
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(width: 20),
+                Expanded(
+                  child: _sectionCard(
+                    title: "Status Results",
+                    child: ExpansionTile(
+                      shape: const Border(),
+                      tilePadding: EdgeInsets.zero,
+                      title: Center(
+                        child: Text(
+                          "Success: ${_successList.length}  Failed: ${_failedList.length}", 
+                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)
+                        ),
+                      ),
+                      children: [
+                        _copyButton("Failed", _failedList, Colors.redAccent),
+                        _copyButton("Success", _successList, Colors.green),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
 
           const SizedBox(height: 30),
@@ -165,7 +167,7 @@ class _DownloadPageState extends State<DownloadPage> {
             ],
           ),
           const SizedBox(height: 20),
-          _input("Subject Codes (9701)", (v) => job.subjects = v.split(',').map((e) => e.trim()).toList()),
+          _input("Subject Codes (9701, 9702)", (v) => job.subjects = v.split(',').map((e) => e.trim()).toList()),
           const SizedBox(height: 12),
           Row(
             children: [

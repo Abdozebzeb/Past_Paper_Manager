@@ -71,10 +71,7 @@ class _ViewPapersPageState extends State<ViewPapersPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: false,
-        actions: [
-          IconButton(onPressed: _refresh, icon: const Icon(Icons.refresh, color: Colors.blueAccent)),
-          const SizedBox(width: 10),
-        ],
+        actions: const [], 
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(25),
@@ -90,21 +87,24 @@ class _ViewPapersPageState extends State<ViewPapersPage> {
                 border: Border.all(color: Colors.blueAccent.withOpacity(0.1)),
               ),
               child: Column(
-                mainAxisSize: MainAxisSize.min, 
+                crossAxisAlignment: CrossAxisAlignment.start, 
                 children: [
                   const Text("Filter Papers", style: TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 14)),
                   const SizedBox(height: 25),
-                  Wrap(
-                    spacing: 12,
-                    runSpacing: 15,
-                    alignment: WrapAlignment.center, 
-                    children: [
-                      _pill("Subject", subject, subjects, (v) => setState(() { subject = v; series = year = type = paper = null; })),
-                      if (subject != null) _pill("Series", series, FilterLogic.getSeries(papers, subject!), (v) => setState(() { series = v; year = type = paper = null; })),
-                      if (series != null) _pill("Year", year, FilterLogic.getYears(papers, subject!, series!), (v) => setState(() { year = v; type = paper = null; })),
-                      if (year != null) _pill("Type", type, FilterLogic.getTypes(papers, subject!, series!, year!), (v) => setState(() { type = v; paper = null; })),
-                      if (type != null && type != "gt") _pill("Paper", paper, FilterLogic.getPapers(papers, subject!, series!, year!, type!), (v) => setState(() => paper = v)),
-                    ],
+                  
+                  Center(
+                    child: Wrap(
+                      spacing: 12,
+                      runSpacing: 15,
+                      alignment: WrapAlignment.center, 
+                      children: [
+                        _pill("Subject", subject, subjects, (v) => setState(() { subject = v; series = year = type = paper = null; })),
+                        if (subject != null) _pill("Series", series, FilterLogic.getSeries(papers, subject!), (v) => setState(() { series = v; year = type = paper = null; })),
+                        if (series != null) _pill("Year", year, FilterLogic.getYears(papers, subject!, series!), (v) => setState(() { year = v; type = paper = null; })),
+                        if (year != null) _pill("Type", type, FilterLogic.getTypes(papers, subject!, series!, year!), (v) => setState(() { type = v; paper = null; })),
+                        if (type != null && type != "gt") _pill("Paper", paper, FilterLogic.getPapers(papers, subject!, series!, year!, type!), (v) => setState(() => paper = v)),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 40), 
                   Row(
