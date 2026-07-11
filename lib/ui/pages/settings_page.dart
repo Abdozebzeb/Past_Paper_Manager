@@ -90,8 +90,11 @@ class _SettingsPageState extends State<SettingsPage> {
             const Text("CIE Past Paper Manager", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
             const Text("Created by Abdullah Zeb", style: TextStyle(color: Colors.grey)),
             const Divider(height: 40, color: Colors.white10),
-            _infoRow("Version", "2.0.0"),
-            _infoRow("Build Date", "July 2026"),
+                    _infoRow("App Version", "2.0.0.0"),
+                    _infoRow("Version Release Date", "11/7/2026"),
+                    _infoRow("Build Type", "Release (Windows)"),
+                    
+                    
             const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
