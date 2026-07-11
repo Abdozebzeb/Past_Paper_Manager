@@ -16,7 +16,6 @@ class ViewPapersPage extends StatefulWidget {
 }
 
 class _ViewPapersPageState extends State<ViewPapersPage> {
-  
   final Map<String, String> _displayNames = {
     's': 'Summer', 
     'w': 'Winter', 
@@ -37,7 +36,6 @@ class _ViewPapersPageState extends State<ViewPapersPage> {
   Future<void> _openPaperLogic(LibraryProvider lib, {String? overrideType}) async {
     try {
       final targetType = overrideType ?? lib.type;
-      
       final targetPaper = (targetType == "gt") ? null : lib.paper;
 
       final match = lib.papers.firstWhere((item) =>
@@ -48,7 +46,16 @@ class _ViewPapersPageState extends State<ViewPapersPage> {
           (targetType == "gt" || item.paper == targetPaper));
       
       final fileName = match.path.split(Platform.pathSeparator).last;
-      AnalyticsService().logPaperOpen(fileName);
+      
+      
+      final analytics = AnalyticsService();
+      if (overrideType == null) {
+        await analytics.logButtonClick("open_paper_button");
+      } else {
+        await analytics.logButtonClick("quick_action_$overrideType");
+      }
+      await analytics.logPaperOpen(fileName);
+      
       Provider.of<ReaderController>(context, listen: false).openFile(fileName, match.path);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -76,7 +83,6 @@ class _ViewPapersPageState extends State<ViewPapersPage> {
         padding: const EdgeInsets.all(25),
         child: Column(
           children: [
-            
             Container(
               width: double.infinity, padding: const EdgeInsets.all(25),
               decoration: BoxDecoration(
@@ -143,7 +149,6 @@ class _ViewPapersPageState extends State<ViewPapersPage> {
         icon: const Icon(Icons.arrow_drop_down, color: Colors.white, size: 30),
         onSelected: (val) => _openPaperLogic(lib, overrideType: val),
         itemBuilder: (context) => [
-          
           if (lib.type != "qp") 
             const PopupMenuItem(value: "qp", child: Text("Open Question Paper")),
           if (lib.type != "ms") 
