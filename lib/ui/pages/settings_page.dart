@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_markdown/flutter_markdown.dart'; 
 import '../../logic/settings_provider.dart';
 import '../../services/folder_service.dart';
 
@@ -78,6 +79,24 @@ class _SettingsPageState extends State<SettingsPage> {
     child: child,
   );
 
+  void _showVersionNotes(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF161D2D),
+        title: const Text("Version Notes"),
+        content: const SizedBox(
+          width: 500,
+          height: 400,
+          child: Markdown(
+            data: "# Version 2.0.0\n* Added Google Login\n* Added Markdown Reader\n* Improved Sidebar",
+          ),
+        ),
+        actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text("Close"))],
+      ),
+    );
+  }
+
   void _showAboutSheet(BuildContext context) {
     showModalBottomSheet(
       context: context, backgroundColor: Theme.of(context).cardColor,
@@ -90,11 +109,16 @@ class _SettingsPageState extends State<SettingsPage> {
             const Text("CIE Past Paper Manager", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
             const Text("Created by Abdullah Zeb", style: TextStyle(color: Colors.grey)),
             const Divider(height: 40, color: Colors.white10),
-                    _infoRow("App Version", "2.0.0.0"),
-                    _infoRow("Version Release Date", "11/7/2026"),
-                    _infoRow("Build Type", "Release (Windows)"),
-                    
-                    
+            _infoRow("App Version", "2.0.0.0"),
+            _infoRow("Version Release Date", "11/7/2026"),
+            _infoRow("Build Type", "Release (Windows)"),
+            
+            
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () => _showVersionNotes(context),
+              child: const Text("View Version Notes"),
+            ),
             const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
