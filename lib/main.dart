@@ -92,7 +92,7 @@ class FirstRunScreen extends StatelessWidget {
               const SizedBox(height: 20),
               const Text("Welcome", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
               const SizedBox(height: 10),
-              const Text("Your premium past paper manager is ready.", textAlign: TextAlign.center, style: TextStyle(color: Colors.grey)),
+              const Text("Your Past Paper Manager is ready.", textAlign: TextAlign.center, style: TextStyle(color: Colors.grey)),
               const SizedBox(height: 30),
               SizedBox(
                 width: double.infinity,
