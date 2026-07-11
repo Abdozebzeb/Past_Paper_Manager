@@ -1,6 +1,5 @@
-The opened Papers is no longer logging
-The view version notes button should be uniform
-The users name and email should be fetched from google account and saved to thier firestore document 
-the view version notes popup is hardcoded dark theme
-there should be a functional logout button in settings, which will delete the shared prefernces file
-
+Problems After V2.0.0 release:
+    Open Paper button number of clicks not being logged, the open paper button, More options button, Open Grade Threshold, Open Marking Scheme and Open Question paper button clicks should be increment logged, like before i have sent you the previous lib folder
+    Not sure about the redundant url , i think it may be hardcoded in the app somewhere, beacuse i removed the working urls and replaced them with dummy urls but the files are still getting downloaded, or if the url is getting saved somewhere it should be in shared prefernces, and upon every app open it should fetch the urls and restore them in sahred prefernces
+    When i sign in with google i get the autheticaton successfull tab but i remail on the login screen, the firebase last seen also gets updated and the shared prefernces get refilled, i need to close the app and restart it again to go to the view papers page (This i experinced on release becuse on debug i used to hot reload and did not notice it)
+    

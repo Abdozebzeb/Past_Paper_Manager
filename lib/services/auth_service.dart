@@ -7,20 +7,24 @@ import 'package:google_sign_in_all_platforms/google_sign_in_all_platforms.dart' 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  Future<User?> signInWithGoogle() async {
-    try {
-      // DESKTOP LOGIC (Windows/MacOS)
-      if (!kIsWeb && (Platform.isWindows || Platform.isMacOS)) {
-        // Inside your AuthService class
-final googleSignIn = desktop.GoogleSignIn(
-  params: desktop.GoogleSignInParams(
+  // --- FIX: Create the Desktop instance ONCE at the class level ---
+  static final desktop.GoogleSignIn _desktopSignIn = desktop.GoogleSignIn(
+    params: desktop.GoogleSignInParams(
     clientId: "775491767902-mgh96bqr9k1ac7md6lrfjqrj3ullrlkl.apps.googleusercontent.com",
     clientSecret: "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", // Windows needs this!
     redirectPort: 8080, // This is important
-  ),
-);
 
-        final response = await googleSignIn.signIn();
+    scopes: ['email', 'profile'],
+    ),
+  );
+
+  Future<User?> signInWithGoogle() async {
+    try {
+      // WINDOWS / MACOS LOGIC
+      if (!kIsWeb && (Platform.isWindows || Platform.isMacOS)) {
+        // Use the existing static instance instead of creating a new one
+        final response = await _desktopSignIn.signIn();
+        
         if (response == null) return null;
 
         final AuthCredential credential = GoogleAuthProvider.credential(
@@ -30,7 +34,8 @@ final googleSignIn = desktop.GoogleSignIn(
 
         final UserCredential userCredential = await _auth.signInWithCredential(credential);
         return userCredential.user;
-      } 
+      }
+
       // MOBILE LOGIC
       else {
         final mobile.GoogleSignIn googleSignIn = mobile.GoogleSignIn();
@@ -42,6 +47,7 @@ final googleSignIn = desktop.GoogleSignIn(
           accessToken: googleAuth.accessToken,
           idToken: googleAuth.idToken,
         );
+
         final UserCredential userCredential = await _auth.signInWithCredential(credential);
         return userCredential.user;
       }
@@ -52,6 +58,12 @@ final googleSignIn = desktop.GoogleSignIn(
   }
 
   Future<void> signOut() async {
-    await _auth.signOut();
+    try {
+      await _auth.signOut();
+      // Note: desktop_sign_in_all_platforms does not usually require 
+      // a specific plugin signout call to clear the session locally.
+    } catch (e) {
+      debugPrint("Sign out error: $e");
+    }
   }
 }

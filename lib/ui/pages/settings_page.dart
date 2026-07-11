@@ -9,6 +9,7 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import '../../logic/settings_provider.dart';
 import '../../services/folder_service.dart';
 import '../auth/login_page.dart'; // Import your login page
+import 'package:url_launcher/url_launcher.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -18,6 +19,16 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   bool _isProcessing = false;
+  void _launchURL(String url) async {
+    final Uri uri = Uri.parse(url);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Could not open link")),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -141,10 +152,8 @@ class _SettingsPageState extends State<SettingsPage> {
             const Divider(height: 40, color: Colors.white10),
             _infoRow("App Version", "2.0.0.0"),
             _infoRow("Version Release Date", "11/7/2026"),
-            _infoRow("Build Type", "Release (Windows)"),
+            _infoRow("Build Type", "Release"),
             const SizedBox(height: 25),
-            
-            // --- UPDATED UNIFORM BUTTON ---
             SizedBox(
               width: double.infinity,
               height: 55,
@@ -163,8 +172,15 @@ class _SettingsPageState extends State<SettingsPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                IconButton(icon: const FaIcon(FontAwesomeIcons.github), onPressed: () {}),
-                IconButton(icon: const FaIcon(FontAwesomeIcons.instagram), onPressed: () {}),
+                IconButton(
+                  icon: const FaIcon(FontAwesomeIcons.github), 
+                  onPressed: () => _launchURL("https://github.com/Abdozebzeb"),
+                ),
+                const SizedBox(width: 20),
+                IconButton(
+                  icon: const FaIcon(FontAwesomeIcons.instagram), 
+                  onPressed: () => _launchURL("https://www.instagram.com/abdullahhzeb/"),
+                ),
               ],
             )
           ],

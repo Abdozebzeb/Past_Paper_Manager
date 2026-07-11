@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../services/auth_service.dart';
 import '../../services/analytics_service.dart';
+import '../main_screen.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -22,70 +23,50 @@ class _LoginPageState extends State<LoginPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
-                Icons.auto_awesome,
-                size: 80,
-                color: Colors.blueAccent,
-              ),
+              const Icon(Icons.auto_awesome, size: 80, color: Colors.blueAccent),
               const SizedBox(height: 24),
-              const Text(
-                "CIE Manager",
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              const Text(
-                "Sign in to manage your past papers",
-                style: TextStyle(color: Colors.grey),
-              ),
+              const Text("CIE Manager", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white)),
+              const Text("Sign in to manage your past papers", style: TextStyle(color: Colors.grey)),
               const SizedBox(height: 50),
-
               SizedBox(
                 width: double.infinity,
-                height: 55, // Uniform Height
+                height: 55,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blueAccent,
                     foregroundColor: Colors.white,
                     elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ), // Uniform Corners
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),
-                  onPressed: _isLoading
-                      ? null
-                      : () async {
-                          setState(() => _isLoading = true);
-                          final user = await AuthService().signInWithGoogle();
-                          if (user != null) {
-                            // Capture name, email and update Firestore immediately
-                            await AnalyticsService().initializeUser();
-                          }
-                          if (mounted) setState(() => _isLoading = false);
-                        },
+                  onPressed: _isLoading ? null : () async {
+                    setState(() => _isLoading = true);
+                    final user = await AuthService().signInWithGoogle();
+                    
+                    if (user != null) {
+                      await AnalyticsService().initializeUser();
+                      
+                      // --- FIX: Manual refresh/navigation if stuck ---
+                      if (mounted) {
+                        // Small delay to ensure Firebase Auth Stream has caught up
+                        await Future.delayed(const Duration(milliseconds: 500));
+                        if (mounted) {
+                           // This pushes to the MainScreen directly if the StreamBuilder in main.dart is slow
+                           Navigator.of(context).pushReplacement(
+                             MaterialPageRoute(builder: (_) => const MainScreen())
+                           );
+                        }
+                      }
+                    }
+                    if (mounted) setState(() => _isLoading = false);
+                  },
                   child: _isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
+                      ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                       : const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             FaIcon(FontAwesomeIcons.google, size: 18),
                             SizedBox(width: 12),
-                            Text(
-                              "Sign in with Google",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
+                            Text("Sign in with Google", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                           ],
                         ),
                 ),

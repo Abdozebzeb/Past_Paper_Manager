@@ -4,7 +4,7 @@ import '../services/folder_service.dart';
 import '../services/config_service.dart';
 
 class DownloadJob {
-  List<String> subjects; // Changed to List
+  List<String> subjects; 
   int startYear;
   int endYear;
   List<String> papers;
@@ -22,7 +22,6 @@ class DownloadJob {
 }
 
 class Downloader {
-  // Renamed to downloadBatch to support multiple jobs correctly
   static Future<void> downloadBatch({
     required List<DownloadJob> jobs,
     required Function(double) onProgress,
@@ -33,8 +32,12 @@ class Downloader {
     List<String> seriesList = ['s', 'w', 'm'];
     List<String> allFilesToDownload = [];
 
+    // Prioritize remote paths from ConfigService
+    List<String> activePaths = ConfigService.downloadPaths;
+
     for (var job in jobs) {
       for (var sub in job.subjects) {
+        if (sub.isEmpty) continue;
         for (int year = job.startYear; year <= job.endYear; year++) {
           String yr = year.toString().padLeft(2, '0');
           for (String series in seriesList) {
@@ -56,14 +59,18 @@ class Downloader {
     }
 
     int total = allFilesToDownload.length;
-    if (total == 0) return;
+    if (total == 0) {
+      onProgress(1.0);
+      return;
+    }
     int done = 0;
 
     for (String fileName in allFilesToDownload) {
       bool success = false;
-      for (String basePath in ConfigService.downloadPaths) {
+      for (String basePath in activePaths) {
         try {
-          final response = await http.get(Uri.parse("$basePath$fileName"));
+          final url = basePath.endsWith('/') ? "$basePath$fileName" : "$basePath/$fileName";
+          final response = await http.get(Uri.parse(url));
           if (response.statusCode == 200) {
             final file = File("$folderPath${Platform.pathSeparator}$fileName");
             await file.writeAsBytes(response.bodyBytes);
