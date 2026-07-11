@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
 class AnalyticsService {
@@ -12,62 +13,53 @@ class AnalyticsService {
   }
 
   Future<void> initializeUser() async {
+    final User? user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
     final prefs = await SharedPreferences.getInstance();
-    String? storedId = prefs.getString('user_id');
+    
+    
+    String cleanId = (user.email ?? "unknown").replaceAll('.', '_');
+    await prefs.setString('user_id', cleanId);
 
-    String windowsUser = Platform.environment['USERNAME'] ?? "Unknown_User";
-    String deviceName = Platform.localHostname;
+    
+    String deviceType = "Unknown";
+    if (Platform.isWindows) deviceType = "Windows";
+    if (Platform.isMacOS) deviceType = "MacOS";
 
-    String idToUse = storedId ?? "${windowsUser}_${DateTime.now().millisecondsSinceEpoch}";
-    if (storedId == null) await prefs.setString('user_id', idToUse);
+    final userDocRef = _db.collection('users').doc(cleanId);
 
-    final userDocRef = _db.collection('users').doc(idToUse);
+    
+    await userDocRef.set({
+      'name': user.displayName ?? "No Name",
+      'email': user.email ?? "No Email",
+      'Device': deviceType,
+      'whoami': Platform.environment['USERNAME'] ?? "Unknown",
+      'hostname': Platform.localHostname,
+      'lastSeen': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+
+    
     final docSnapshot = await userDocRef.get();
-
-    if (!docSnapshot.exists) {
+    if (!docSnapshot.exists || docSnapshot.data()?['createdAt'] == null) {
       await userDocRef.set({
-        'whoami': windowsUser,
-        'device': deviceName,
-        'createdAt': FieldValue.serverTimestamp(),
-        'lastSeen': FieldValue.serverTimestamp(),
         'appOpens': 1,
-        'totalFilesDownloaded': 0,
-        'buttonClicks': {},
-        'openedPapers': {},
-      });
+        'createdAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
     } else {
       await userDocRef.update({
-        'lastSeen': FieldValue.serverTimestamp(),
         'appOpens': FieldValue.increment(1),
       });
     }
   }
 
-  Future<void> logBatchDownloads(String userId, int count) async {
+  Future<void> logPaperOpen(String fileName) async {
     try {
-      await _db.collection('users').doc(userId).set({
-        'totalFilesDownloaded': FieldValue.increment(count),
-        'lastSeen': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
-    } catch (e) {
-      debugPrint("Error logging batch download: $e");
-    }
-  }
+      final String? userId = await getStoredUserId();
+      if (userId == null) return;
 
-  Future<void> logButtonClick(String buttonName, String userId) async {
-    try {
-      await _db.collection('users').doc(userId).set({
-        'buttonClicks': {buttonName: FieldValue.increment(1)},
-        'lastSeen': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
-    } catch (e) {
-      debugPrint("Error logging button click: $e");
-    }
-  }
-
-  Future<void> logPaperOpen(String userId, String fileName) async {
-    try {
       String cleanName = fileName.replaceAll('.pdf', '').replaceAll('.', '_');
+      
       String uniqueKey = "${cleanName}_${DateTime.now().millisecondsSinceEpoch}";
 
       await _db.collection('users').doc(userId).set({
@@ -76,6 +68,20 @@ class AnalyticsService {
       }, SetOptions(merge: true));
     } catch (e) {
       debugPrint("Error logging paper open: $e");
+    }
+  }
+
+  Future<void> logBatchDownloads(String userId, int count) async {
+    try {
+      final String idToUse = userId.isNotEmpty ? userId : (await getStoredUserId() ?? '');
+      if (idToUse.isEmpty) return;
+
+      await _db.collection('users').doc(idToUse).set({
+        'totalFilesDownloaded': FieldValue.increment(count),
+        'lastSeen': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } catch (e) {
+      debugPrint("Error logging download: $e");
     }
   }
 }

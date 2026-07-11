@@ -7,6 +7,7 @@ import '../../logic/paper_model.dart';
 import '../../logic/reader_controller.dart';
 import '../../logic/library_provider.dart';
 import '../../services/folder_service.dart';
+import '../../services/analytics_service.dart';
 
 class ViewPapersPage extends StatefulWidget {
   const ViewPapersPage({super.key});
@@ -47,6 +48,7 @@ class _ViewPapersPageState extends State<ViewPapersPage> {
           (targetType == "gt" || item.paper == targetPaper));
       
       final fileName = match.path.split(Platform.pathSeparator).last;
+      AnalyticsService().logPaperOpen(fileName);
       Provider.of<ReaderController>(context, listen: false).openFile(fileName, match.path);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(

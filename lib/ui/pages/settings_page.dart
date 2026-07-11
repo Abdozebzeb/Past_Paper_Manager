@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
+import 'package:shared_preferences/shared_preferences.dart'; 
+import 'package:firebase_auth/firebase_auth.dart'; 
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:flutter_markdown/flutter_markdown.dart'; 
+import 'package:flutter_markdown/flutter_markdown.dart';
 import '../../logic/settings_provider.dart';
 import '../../services/folder_service.dart';
+import '../auth/login_page.dart'; 
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -66,6 +68,30 @@ class _SettingsPageState extends State<SettingsPage> {
               onTap: () => _showAboutSheet(context),
             ),
           ),
+          const SizedBox(height: 25),
+          
+          
+          _sectionTitle("Account"),
+          _settingsCard(
+            ListTile(
+              leading: const Icon(Icons.logout, color: Colors.redAccent),
+              title: const Text("Logout", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+              subtitle: const Text("Sign out and reset app preferences"),
+              onTap: () async {
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.clear(); 
+                await FirebaseAuth.instance.signOut();
+                
+                if (context.mounted) {
+                  
+                  Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (context) => const LoginPage()),
+                    (route) => false,
+                  );
+                }
+              },
+            ),
+          ),
           if (_isProcessing) const Padding(padding: EdgeInsets.all(20), child: Center(child: CircularProgressIndicator())),
         ],
       ),
@@ -83,13 +109,17 @@ class _SettingsPageState extends State<SettingsPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF161D2D),
+        backgroundColor: Theme.of(context).cardColor, 
         title: const Text("Version Notes"),
-        content: const SizedBox(
+        content: SizedBox(
           width: 500,
           height: 400,
           child: Markdown(
             data: "# Version 2.0.0\n* Added Google Login\n* Added Markdown Reader\n* Improved Sidebar",
+            styleSheet: MarkdownStyleSheet(
+              p: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color), 
+              h1: const TextStyle(color: Colors.blueAccent),
+            ),
           ),
         ),
         actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text("Close"))],
@@ -112,12 +142,22 @@ class _SettingsPageState extends State<SettingsPage> {
             _infoRow("App Version", "2.0.0.0"),
             _infoRow("Version Release Date", "11/7/2026"),
             _infoRow("Build Type", "Release (Windows)"),
+            const SizedBox(height: 25),
             
             
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () => _showVersionNotes(context),
-              child: const Text("View Version Notes"),
+            SizedBox(
+              width: double.infinity,
+              height: 55,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blueAccent,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  elevation: 0,
+                ),
+                onPressed: () => _showVersionNotes(context),
+                child: const Text("View Version Notes", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              ),
             ),
             const SizedBox(height: 20),
             Row(
