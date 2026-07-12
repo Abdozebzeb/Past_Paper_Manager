@@ -103,8 +103,9 @@ msix_config:
   display_name: CIE Past Paper Manager
   publisher_display_name: Abdullah Zeb
   identity_name: AbdullahZeb.CIEPastPaperManager
-  publisher: CN=E57DC75B-438E-40E2-8082-A9CF6DA669F2
+  publisher: "CN=E57DC75B-438E-40E2-8082-A9CF6DA669F2"
   msix_version: 2.0.0.0
   logo_path: assets/msix_icon.png
   capabilities: internetClient
   build_windows: false
+  store: true
