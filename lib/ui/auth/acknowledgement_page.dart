@@ -44,18 +44,20 @@ Welcome to the **CIE Past Paper Manager**.
             const SizedBox(height: 30),
             SizedBox(
               width: double.infinity, 
-              height: 55, // Uniform Height
+              height: 55, 
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blueAccent,
                   foregroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)), // Uniform Corners
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
                 onPressed: () async {
                   await AppState.setNotFirstRun();
                   if (context.mounted) {
-                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainScreen()));
+                    Navigator.pushReplacement(
+                      context, 
+                      MaterialPageRoute(builder: (_) => const MainScreen())
+                    );
                   }
                 },
                 child: const Text("I Agree & Continue", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../services/auth_service.dart';
 import '../../services/analytics_service.dart';
+import '../../logic/app_state.dart';
+import 'acknowledgement_page.dart';
 import '../main_screen.dart';
 
 class LoginPage extends StatefulWidget {
@@ -35,7 +37,6 @@ class _LoginPageState extends State<LoginPage> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blueAccent,
                     foregroundColor: Colors.white,
-                    elevation: 0,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),
                   onPressed: _isLoading ? null : () async {
@@ -45,15 +46,21 @@ class _LoginPageState extends State<LoginPage> {
                     if (user != null) {
                       await AnalyticsService().initializeUser();
                       
-                      // --- FIX: Manual refresh/navigation if stuck ---
                       if (mounted) {
-                        // Small delay to ensure Firebase Auth Stream has caught up
-                        await Future.delayed(const Duration(milliseconds: 500));
+                        final isFirst = await AppState.isFirstRun();
                         if (mounted) {
-                           // This pushes to the MainScreen directly if the StreamBuilder in main.dart is slow
-                           Navigator.of(context).pushReplacement(
-                             MaterialPageRoute(builder: (_) => const MainScreen())
-                           );
+                          if (isFirst) {
+                            // After login, if first run, go to Acknowledgement
+                            Navigator.pushReplacement(
+                              context, 
+                              MaterialPageRoute(builder: (_) => const AcknowledgementPage())
+                            );
+                          } else {
+                            Navigator.pushReplacement(
+                              context, 
+                              MaterialPageRoute(builder: (_) => const MainScreen())
+                            );
+                          }
                         }
                       }
                     }

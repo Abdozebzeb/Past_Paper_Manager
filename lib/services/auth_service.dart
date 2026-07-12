@@ -7,22 +7,18 @@ import 'package:google_sign_in_all_platforms/google_sign_in_all_platforms.dart' 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // --- FIX: Create the Desktop instance ONCE at the class level ---
   static final desktop.GoogleSignIn _desktopSignIn = desktop.GoogleSignIn(
     params: desktop.GoogleSignInParams(
-    clientId: "775491767902-mgh96bqr9k1ac7md6lrfjqrj3ullrlkl.apps.googleusercontent.com",
-    clientSecret: "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", // Windows needs this!
-    redirectPort: 8080, // This is important
-
-    scopes: ['email', 'profile'],
+      clientId: "775491767902-mgh96bqr9k1ac7md6lrfjqrj3ullrlkl.apps.googleusercontent.com",
+      clientSecret: "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",
+      redirectPort: 8080,
+      scopes: ['email', 'profile'],
     ),
   );
 
   Future<User?> signInWithGoogle() async {
     try {
-      // WINDOWS / MACOS LOGIC
       if (!kIsWeb && (Platform.isWindows || Platform.isMacOS)) {
-        // Use the existing static instance instead of creating a new one
         final response = await _desktopSignIn.signIn();
         
         if (response == null) return null;
@@ -34,10 +30,7 @@ class AuthService {
 
         final UserCredential userCredential = await _auth.signInWithCredential(credential);
         return userCredential.user;
-      }
-
-      // MOBILE LOGIC
-      else {
+      } else {
         final mobile.GoogleSignIn googleSignIn = mobile.GoogleSignIn();
         final mobile.GoogleSignInAccount? googleUser = await googleSignIn.signIn();
         if (googleUser == null) return null;
@@ -59,9 +52,12 @@ class AuthService {
 
   Future<void> signOut() async {
     try {
+      if (!kIsWeb && (Platform.isWindows || Platform.isMacOS)) {
+        await _desktopSignIn.signOut();
+      } else {
+        await mobile.GoogleSignIn().signOut();
+      }
       await _auth.signOut();
-      // Note: desktop_sign_in_all_platforms does not usually require 
-      // a specific plugin signout call to clear the session locally.
     } catch (e) {
       debugPrint("Sign out error: $e");
     }

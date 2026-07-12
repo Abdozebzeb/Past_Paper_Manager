@@ -9,7 +9,8 @@ import 'logic/reader_controller.dart';
 import 'logic/library_provider.dart';
 import 'logic/download_controller.dart';
 import 'services/config_service.dart';
-import 'services/analytics_service.dart'; // Restored
+import 'services/analytics_service.dart';
+import 'services/auth_service.dart';
 import 'ui/main_screen.dart';
 import 'ui/auth/login_page.dart';
 import 'ui/auth/acknowledgement_page.dart';
@@ -18,9 +19,15 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   
-  // --- Restored Analytics & Remote Config ---
-  final analytics = AnalyticsService();
-  await analytics.initializeUser();
+  // --- CRITICAL FIX FOR WINDOWS GHOST LOGIN ---
+  final bool firstRun = await AppState.isFirstRun();
+  if (firstRun) {
+    // If we just deleted the Roaming folder, we MUST clear the 
+    // Windows Credential Manager so the app doesn't think we are logged in.
+    await AuthService().signOut(); 
+  }
+  // ---------------------------------------------
+
   await ConfigService.fetchRemoteConfig();
   
   runApp(
@@ -61,22 +68,21 @@ class MyApp extends StatelessWidget {
       ),
       home: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
-        builder: (context, snapshot) {
-          // 1. Loading state for Firebase
-          if (snapshot.connectionState == ConnectionState.waiting) {
+        builder: (context, authSnapshot) {
+          if (authSnapshot.connectionState == ConnectionState.waiting) {
             return const Scaffold(body: Center(child: CircularProgressIndicator()));
           }
 
-          // 2. If user is NOT logged in, show Login Screen
-          if (!snapshot.hasData) {
+          // 1. If the user is NOT logged in, they MUST go to Login Page
+          if (!authSnapshot.hasData || authSnapshot.data == null) {
             return const LoginPage();
           }
 
-          // 3. If user IS logged in, check if they need to see Acknowledgement
+          // 2. If the user IS logged in, we check if they accepted terms
           return FutureBuilder<bool>(
             future: AppState.isFirstRun(),
             builder: (context, firstRunSnapshot) {
-              if (!firstRunSnapshot.hasData) {
+              if (firstRunSnapshot.connectionState == ConnectionState.waiting) {
                 return const Scaffold(body: Center(child: CircularProgressIndicator()));
               }
               
@@ -84,7 +90,9 @@ class MyApp extends StatelessWidget {
                 return const AcknowledgementPage();
               }
 
-              // 4. Everything is ready, show Main Screen
+              // Only initialize analytics once we are logged in AND terms are accepted
+              AnalyticsService().initializeUser();
+
               return const MainScreen();
             },
           );
