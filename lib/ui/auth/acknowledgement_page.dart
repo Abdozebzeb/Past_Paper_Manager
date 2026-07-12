@@ -49,13 +49,15 @@ Welcome to the **CIE Past Paper Manager**.
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blueAccent,
                   foregroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)), 
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
                 onPressed: () async {
                   await AppState.setNotFirstRun();
                   if (context.mounted) {
-                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainScreen()));
+                    Navigator.pushReplacement(
+                      context, 
+                      MaterialPageRoute(builder: (_) => const MainScreen())
+                    );
                   }
                 },
                 child: const Text("I Agree & Continue", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),

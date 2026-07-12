@@ -2,13 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
-import 'package:shared_preferences/shared_preferences.dart'; 
-import 'package:firebase_auth/firebase_auth.dart'; 
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import '../../logic/settings_provider.dart';
 import '../../services/folder_service.dart';
-import '../auth/login_page.dart'; 
+import '../../services/auth_service.dart';
+import '../auth/login_page.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -19,6 +18,7 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   bool _isProcessing = false;
+
   void _launchURL(String url) async {
     final Uri uri = Uri.parse(url);
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
@@ -81,20 +81,17 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           const SizedBox(height: 25),
           
-          
           _sectionTitle("Account"),
           _settingsCard(
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.redAccent),
               title: const Text("Logout", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
-              subtitle: const Text("Sign out and reset app preferences"),
+              subtitle: const Text("Sign out of your Google Account"),
+              
               onTap: () async {
-                final prefs = await SharedPreferences.getInstance();
-                await prefs.clear(); 
-                await FirebaseAuth.instance.signOut();
+                await AuthService().signOut(); 
                 
                 if (context.mounted) {
-                  
                   Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
                     MaterialPageRoute(builder: (context) => const LoginPage()),
                     (route) => false,
@@ -120,7 +117,7 @@ class _SettingsPageState extends State<SettingsPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Theme.of(context).cardColor, 
+        backgroundColor: Theme.of(context).cardColor,
         title: const Text("Version Notes"),
         content: SizedBox(
           width: 500,
@@ -128,7 +125,7 @@ class _SettingsPageState extends State<SettingsPage> {
           child: Markdown(
             data: "# Version 2.0.0\n* Added Google Login\n* Added Markdown Reader\n* Improved Sidebar",
             styleSheet: MarkdownStyleSheet(
-              p: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color), 
+              p: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
               h1: const TextStyle(color: Colors.blueAccent),
             ),
           ),
@@ -191,7 +188,6 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Widget _infoRow(String l, String v) => Padding(padding: const EdgeInsets.symmetric(vertical: 5), child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text(l, style: const TextStyle(color: Colors.grey)), Text(v, style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold))]));
 
-  
   Future<void> _handleExport() async {
     String? dest = await FilePicker.platform.getDirectoryPath();
     if (dest == null) return;

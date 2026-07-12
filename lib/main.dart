@@ -9,7 +9,8 @@ import 'logic/reader_controller.dart';
 import 'logic/library_provider.dart';
 import 'logic/download_controller.dart';
 import 'services/config_service.dart';
-import 'services/analytics_service.dart'; 
+import 'services/analytics_service.dart';
+import 'services/auth_service.dart';
 import 'ui/main_screen.dart';
 import 'ui/auth/login_page.dart';
 import 'ui/auth/acknowledgement_page.dart';
@@ -19,8 +20,14 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   
   
-  final analytics = AnalyticsService();
-  await analytics.initializeUser();
+  final bool firstRun = await AppState.isFirstRun();
+  if (firstRun) {
+    
+    
+    await AuthService().signOut(); 
+  }
+  
+
   await ConfigService.fetchRemoteConfig();
   
   runApp(
@@ -61,14 +68,13 @@ class MyApp extends StatelessWidget {
       ),
       home: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
-        builder: (context, snapshot) {
-          
-          if (snapshot.connectionState == ConnectionState.waiting) {
+        builder: (context, authSnapshot) {
+          if (authSnapshot.connectionState == ConnectionState.waiting) {
             return const Scaffold(body: Center(child: CircularProgressIndicator()));
           }
 
           
-          if (!snapshot.hasData) {
+          if (!authSnapshot.hasData || authSnapshot.data == null) {
             return const LoginPage();
           }
 
@@ -76,7 +82,7 @@ class MyApp extends StatelessWidget {
           return FutureBuilder<bool>(
             future: AppState.isFirstRun(),
             builder: (context, firstRunSnapshot) {
-              if (!firstRunSnapshot.hasData) {
+              if (firstRunSnapshot.connectionState == ConnectionState.waiting) {
                 return const Scaffold(body: Center(child: CircularProgressIndicator()));
               }
               
@@ -85,6 +91,8 @@ class MyApp extends StatelessWidget {
               }
 
               
+              AnalyticsService().initializeUser();
+
               return const MainScreen();
             },
           );

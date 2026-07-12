@@ -7,22 +7,18 @@ import 'package:google_sign_in_all_platforms/google_sign_in_all_platforms.dart' 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  
   static final desktop.GoogleSignIn _desktopSignIn = desktop.GoogleSignIn(
     params: desktop.GoogleSignInParams(
-    clientId: "your_client_id",
-    clientSecret: "your_client_secret", 
-    redirectPort: 8080, 
-
-    scopes: ['email', 'profile'],
+      clientId: "your_client_id",
+      clientSecret: "your_client_secret",
+      redirectPort: 8080,
+      scopes: ['email', 'profile'],
     ),
   );
 
   Future<User?> signInWithGoogle() async {
     try {
-      
       if (!kIsWeb && (Platform.isWindows || Platform.isMacOS)) {
-        
         final response = await _desktopSignIn.signIn();
         
         if (response == null) return null;
@@ -34,10 +30,7 @@ class AuthService {
 
         final UserCredential userCredential = await _auth.signInWithCredential(credential);
         return userCredential.user;
-      }
-
-      
-      else {
+      } else {
         final mobile.GoogleSignIn googleSignIn = mobile.GoogleSignIn();
         final mobile.GoogleSignInAccount? googleUser = await googleSignIn.signIn();
         if (googleUser == null) return null;
@@ -59,9 +52,12 @@ class AuthService {
 
   Future<void> signOut() async {
     try {
+      if (!kIsWeb && (Platform.isWindows || Platform.isMacOS)) {
+        await _desktopSignIn.signOut();
+      } else {
+        await mobile.GoogleSignIn().signOut();
+      }
       await _auth.signOut();
-      
-      
     } catch (e) {
       debugPrint("Sign out error: $e");
     }
