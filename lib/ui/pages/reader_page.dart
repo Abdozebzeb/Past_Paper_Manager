@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import '../../logic/reader_controller.dart';
+import 'reader_side_panel.dart';
 
 class ReaderPage extends StatefulWidget {
   const ReaderPage({super.key});
@@ -78,55 +79,65 @@ class _ReaderPageState extends State<ReaderPage> {
             onPointerSignal: (e) => _handleScrollZoom(e, reader),
             child: LayoutBuilder(
               builder: (context, constraints) {
-                return Stack(
+                
+                bool isQP = currentFile.name.contains("_qp_");
+
+                return Row(
                   children: [
-                    Container(color: Theme.of(context).scaffoldBackgroundColor),
-                    
-                    IndexedStack(
-                      index: reader.currentTabIndex,
-                      children: reader.openFiles.asMap().entries.map((entry) {
-                        int idx = entry.key;
-                        var file = entry.value;
+                    Expanded(
+                      child: Stack(
+                        children: [
+                          Container(color: Theme.of(context).scaffoldBackgroundColor),
+                          
+                          IndexedStack(
+                            index: reader.currentTabIndex,
+                            children: reader.openFiles.asMap().entries.map((entry) {
+                              int idx = entry.key;
+                              var file = entry.value;
 
-                        double viewerWidth = constraints.maxWidth;
-                        if (file.zoom < 1.0) viewerWidth = constraints.maxWidth * file.zoom;
+                              double viewerWidth = constraints.maxWidth;
+                              if (file.zoom < 1.0) viewerWidth = constraints.maxWidth * file.zoom;
 
-                        return Center(
-                          child: SizedBox(
-                            width: viewerWidth,
-                            height: constraints.maxHeight,
-                            child: SfPdfViewer.file(
-                              File(file.path),
-                              key: ValueKey(file.path),
-                              controller: file.controller,
-                              interactionMode: PdfInteractionMode.pan,
-                              onPageChanged: (details) => reader.updatePageInfo(idx, details.newPageNumber, 0),
-                              onDocumentLoaded: (details) => reader.updatePageInfo(idx, 1, details.document.pages.count),
+                              return Center(
+                                child: SizedBox(
+                                  width: viewerWidth,
+                                  height: constraints.maxHeight,
+                                  child: SfPdfViewer.file(
+                                    File(file.path),
+                                    key: ValueKey(file.path),
+                                    controller: file.controller,
+                                    interactionMode: PdfInteractionMode.pan,
+                                    onPageChanged: (details) => reader.updatePageInfo(idx, details.newPageNumber, 0),
+                                    onDocumentLoaded: (details) => reader.updatePageInfo(idx, 1, details.document.pages.count),
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+
+                          
+                          Positioned(
+                            left: 25, bottom: 25,
+                            child: _buildUniformCard(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                child: Text(
+                                  "${currentFile.currentPage} / ${currentFile.totalPages}",
+                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blueAccent),
+                                ),
+                              ),
                             ),
                           ),
-                        );
-                      }).toList(),
-                    ),
 
-                    
-                    Positioned(
-                      left: 25, bottom: 25,
-                      child: _buildUniformCard(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          child: Text(
-                            "${currentFile.currentPage} / ${currentFile.totalPages}",
-                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blueAccent),
+                          
+                          Positioned(
+                            right: 25, bottom: 25,
+                            child: _buildZoomCard(reader, currentFile),
                           ),
-                        ),
+                        ],
                       ),
                     ),
-
-                    
-                    Positioned(
-                      right: 25, bottom: 25,
-                      child: _buildZoomCard(reader, currentFile),
-                    ),
+                    if (isQP) ReaderSidePanel(fileName: currentFile.name),
                   ],
                 );
               },

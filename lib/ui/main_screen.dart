@@ -5,6 +5,7 @@ import 'pages/view_papers_page.dart';
 import 'pages/download_page.dart';
 import 'pages/settings_page.dart';
 import 'pages/reader_page.dart';
+import 'pages/paper_logs_page.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -13,12 +14,13 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  Widget _getPage(int index) {
+    Widget _getPage(int index) {
     switch (index) {
       case 0: return const ViewPapersPage();
       case 1: return const DownloadPage();
       case 2: return const ReaderPage();
-      case 3: return const SettingsPage();
+      case 3: return const PaperLogsPage(); 
+      case 4: return const SettingsPage(); 
       default: return const ViewPapersPage();
     }
   }
@@ -40,9 +42,10 @@ class _MainScreenState extends State<MainScreen> {
                 const SizedBox(height: 20),
                 _navItem(Icons.library_books, 0, "Library", reader),
                 _navItem(Icons.cloud_download, 1, "Download", reader),
+                _navItem(Icons.history_edu, 3, "Logs", reader),
                 const Spacer(),
                 if (hasTabs) _navItem(Icons.menu_book, 2, "Reader", reader, badge: reader.openFiles.length),
-                _navItem(Icons.settings, 3, "Settings", reader),
+                _navItem(Icons.settings, 4, "Settings", reader),
                 const SizedBox(height: 20),
               ],
             ),

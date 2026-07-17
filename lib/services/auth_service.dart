@@ -1,14 +1,15 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:io';
-import 'package:google_sign_in/google_sign_in.dart' as mobile;
-import 'package:google_sign_in_all_platforms/google_sign_in_all_platforms.dart' as desktop;
+import 'package:google_sign_in/google_sign_in.dart' as google_mobile;
+import 'package:google_sign_in_all_platforms/google_sign_in_all_platforms.dart' as google_desktop;
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  static final desktop.GoogleSignIn _desktopSignIn = desktop.GoogleSignIn(
-    params: desktop.GoogleSignInParams(
+  
+  static final google_desktop.GoogleSignIn _desktopSignIn = google_desktop.GoogleSignIn(
+    params: google_desktop.GoogleSignInParams(
       clientId: "your_client_id",
       clientSecret: "your_client_secret",
       redirectPort: 8080,
@@ -18,24 +19,25 @@ class AuthService {
 
   Future<User?> signInWithGoogle() async {
     try {
-      if (!kIsWeb && (Platform.isWindows || Platform.isMacOS)) {
-        final response = await _desktopSignIn.signIn();
+      if (Platform.isWindows) {
         
+        final response = await _desktopSignIn.signIn();
         if (response == null) return null;
 
         final AuthCredential credential = GoogleAuthProvider.credential(
           accessToken: response.accessToken,
           idToken: response.idToken,
         );
-
         final UserCredential userCredential = await _auth.signInWithCredential(credential);
         return userCredential.user;
       } else {
-        final mobile.GoogleSignIn googleSignIn = mobile.GoogleSignIn();
-        final mobile.GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+        
+        
+        final google_mobile.GoogleSignIn googleSignIn = google_mobile.GoogleSignIn();
+        final google_mobile.GoogleSignInAccount? googleUser = await googleSignIn.signIn();
         if (googleUser == null) return null;
 
-        final mobile.GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+        final google_mobile.GoogleSignInAuthentication googleAuth = await googleUser.authentication;
         final AuthCredential credential = GoogleAuthProvider.credential(
           accessToken: googleAuth.accessToken,
           idToken: googleAuth.idToken,
@@ -52,10 +54,10 @@ class AuthService {
 
   Future<void> signOut() async {
     try {
-      if (!kIsWeb && (Platform.isWindows || Platform.isMacOS)) {
+      if (Platform.isWindows) {
         await _desktopSignIn.signOut();
       } else {
-        await mobile.GoogleSignIn().signOut();
+        await google_mobile.GoogleSignIn().signOut();
       }
       await _auth.signOut();
     } catch (e) {

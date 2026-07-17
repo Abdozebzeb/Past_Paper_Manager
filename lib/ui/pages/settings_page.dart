@@ -252,6 +252,42 @@ The first public release of CIE Past Paper Manager, providing students with a st
               trailing: Switch(value: isDark, onChanged: (v) => settings.toggleTheme(v)),
             ),
           ),
+          
+          const SizedBox(height: 25),
+          _sectionTitle("Personalization"),
+          _settingsCard(
+            Theme(
+              data: Theme.of(context).copyWith(dividerColor: Colors.transparent), 
+              child: ExpansionTile(
+                leading: const Icon(Icons.palette_outlined, color: Colors.blueAccent),
+                title: const Text("Color Accent"),
+                subtitle: const Text("Current: Ocean Blue", style: TextStyle(fontSize: 12, color: Colors.grey)),
+                children: [
+                  Container(
+                    height: 80, 
+                    margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.blueAccent.withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          _colorPalette("Ocean Blue", [Colors.blue, Colors.blueAccent, Colors.lightBlue]),
+                          _colorPalette("Sunset Red", [Colors.red, Colors.redAccent, Colors.orange]),
+                          _colorPalette("Forest Green", [Colors.green, Colors.greenAccent, Colors.teal]),
+                          _colorPalette("Royal Purple", [Colors.purple, Colors.purpleAccent, Colors.deepPurple]),
+                        ],
+                      ),
+                    ),
+                  )
+                ],
+              ),
+            ),
+          ),
+          
           const SizedBox(height: 25),
           _sectionTitle("Data Management"),
           _settingsCard(
@@ -315,6 +351,29 @@ The first public release of CIE Past Paper Manager, providing students with a st
     child: child,
   );
 
+  Widget _colorPalette(String name, List<Color> shades) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 15),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 50, height: 30, 
+            clipBehavior: Clip.antiAlias, 
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.white10),
+            ),
+            child: Row(
+              children: shades.map((c) => Expanded(child: Container(color: c))).toList(),
+            ),
+          ),
+          const SizedBox(height: 5),
+          Text(name, style: const TextStyle(fontSize: 9, color: Colors.grey)),
+        ],
+      ),
+    );
+  }
   void _showVersionNotes(BuildContext context) {
     showDialog(
       context: context,
