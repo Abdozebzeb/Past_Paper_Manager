@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:flutter/services.dart';
+import '../../services/paper_data_service.dart';
+import '../../services/grade_aesthetic_service.dart';
 
 class ReaderSidePanel extends StatefulWidget {
   final String fileName;
@@ -12,6 +15,17 @@ class ReaderSidePanel extends StatefulWidget {
 class _ReaderSidePanelState extends State<ReaderSidePanel> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   
+  
+  bool _isLoading = true;
+  String paperName = "Loading...";
+  String paperCode = "Loading...";
+  String duration = "Loading...";
+  String rawMarks = "-";
+  Map<String, String> thresholds = {'A': '-', 'B': '-', 'C': '-', 'D': '-', 'E': '-'};
+  
+  String calculatedGrade = "-";
+  final TextEditingController _marksController = TextEditingController();
+
   bool isTimer = true;
   bool isRunning = false;
   int seconds = 0;
@@ -21,7 +35,126 @@ class _ReaderSidePanelState extends State<ReaderSidePanel> with SingleTickerProv
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _loadData();
   }
+  void _editTimer() {
+    
+    int h = timerSeconds ~/ 3600;
+    int m = (timerSeconds % 3600) ~/ 60;
+    
+    final TextEditingController hCtrl = TextEditingController(text: h.toString());
+    final TextEditingController mCtrl = TextEditingController(text: m.toString());
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Theme.of(context).cardColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: BorderSide(
+            color: Colors.blueAccent.withOpacity(0.1),
+            width: 1.0, 
+          ),
+        ),
+        title: const Text("Set Custom Timer", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueAccent, fontSize: 18)),
+        content: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Expanded(child: _editInput("Hours", hCtrl)),
+            const SizedBox(width: 15),
+            Expanded(child: _editInput("Minutes", mCtrl)),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel", style: TextStyle(color: Colors.grey))),
+          ElevatedButton(
+            onPressed: () {
+              int newH = int.tryParse(hCtrl.text) ?? 0;
+              int newM = int.tryParse(mCtrl.text) ?? 0;
+              setState(() {
+                
+                timerSeconds = (newH * 3600) + (newM * 60);
+                isRunning = false;
+                _ticker?.cancel();
+              });
+              Navigator.pop(context);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blueAccent, 
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))
+            ),
+            child: const Text("Set Time", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _editInput(String label, TextEditingController ctrl) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontSize: 10, color: Colors.blueAccent, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 5),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(color: Colors.black.withOpacity(0.2), borderRadius: BorderRadius.circular(10)),
+          child: TextField(
+            controller: ctrl,
+            keyboardType: TextInputType.number,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            decoration: const InputDecoration(border: InputBorder.none),
+          ),
+        )
+      ],
+    );
+  }
+
+  Future<void> _loadData() async {
+    final data = await PaperDataService.getPaperDetails(widget.fileName);
+    if (mounted) {
+      setState(() {
+        paperName = data['name'] ?? "Unknown";
+        paperCode = data['code'] ?? "Unknown";
+        duration = data['duration'] ?? "N/A";
+        rawMarks = data['raw'] ?? "-";
+        thresholds = data['thresholds'] ?? thresholds;
+        _isLoading = false;
+        
+        
+        _parseDurationToSeconds(duration);
+      });
+    }
+  }
+
+    void _parseDurationToSeconds(String dur) {
+      int totalSec = 0;
+      final hMatch = RegExp(r"(\d+)\s*hour").firstMatch(dur);
+      final mMatch = RegExp(r"(\d+)\s*minute").firstMatch(dur);
+      if (hMatch != null) totalSec += int.parse(hMatch.group(1)!) * 3600;
+      if (mMatch != null) totalSec += int.parse(mMatch.group(1)!) * 60;
+      if (totalSec > 0) setState(() => timerSeconds = totalSec);
+    }
+
+    void _onMarksChanged(String val) {
+    if (val.isEmpty) {
+      setState(() => calculatedGrade = "-");
+      return;
+    }
+
+    final int? marks = int.tryParse(val);
+    final int? maxMarks = int.tryParse(rawMarks);
+
+    if (marks == null || marks < 0 || (maxMarks != null && marks > maxMarks)) {
+      setState(() => calculatedGrade = "X");
+    } else {
+      setState(() => calculatedGrade = PaperDataService.calculateGrade(marks, thresholds));
+    }
+  }
+
+  int timerSeconds = 0;
+  int stopwatchSeconds = 0;
 
   void _toggleClock() {
     if (isRunning) {
@@ -29,13 +162,16 @@ class _ReaderSidePanelState extends State<ReaderSidePanel> with SingleTickerProv
     } else {
       _ticker = Timer.periodic(const Duration(seconds: 1), (timer) {
         setState(() {
-          if (isTimer && seconds > 0) {
-            seconds--;
-          } else if (!isTimer) {
-            seconds++;
+          if (isTimer) {
+            if (timerSeconds > 0) {
+              timerSeconds--;
+            } else {
+              isRunning = false;
+              _ticker?.cancel();
+              SystemSound.play(SystemSoundType.alert);
+            }
           } else {
-            isRunning = false;
-            _ticker?.cancel();
+            stopwatchSeconds++;
           }
         });
       });
@@ -110,13 +246,14 @@ class _ReaderSidePanelState extends State<ReaderSidePanel> with SingleTickerProv
   }
 
   Widget _buildInfoTab() {
+    if (_isLoading) return const Center(child: CircularProgressIndicator());
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _infoField("Paper Name", "Pure Mathematics 1"),
-        _infoField("Paper Code", "9709/12"),
-        _infoField("Standard Duration", "1h 50m"),
-        _infoField("Raw Marks", "75"), 
+        _infoField("Paper Name", paperName),
+        _infoField("Paper Code", paperCode),
+        _infoField("Standard Duration", duration),
+        _infoField("Raw Marks", rawMarks), 
         const SizedBox(height: 10),
         const Text("Grade Thresholds", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blueAccent)),
         const SizedBox(height: 12),
@@ -127,7 +264,6 @@ class _ReaderSidePanelState extends State<ReaderSidePanel> with SingleTickerProv
   }
 
   Widget _thresholdRow() {
-    final Map<String, String> thresholds = {'A': '55', 'B': '48', 'C': '40', 'D': '32', 'E': '25'};
     return Container(
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
@@ -149,13 +285,18 @@ class _ReaderSidePanelState extends State<ReaderSidePanel> with SingleTickerProv
   }
 
   Widget _buildGradingTab() {
+    bool showMessage = calculatedGrade == "-";
+    
     return Column(
       children: [
         const SizedBox(height: 10),
         TextField(
+          controller: _marksController,
+          onChanged: _onMarksChanged,
           style: const TextStyle(fontSize: 14),
           decoration: InputDecoration(
             labelText: "Scored Marks",
+            hintText: rawMarks != "-" ? "Max: $rawMarks" : "Enter marks",
             filled: true, fillColor: Colors.blueAccent.withOpacity(0.05),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
           ),
@@ -163,12 +304,35 @@ class _ReaderSidePanelState extends State<ReaderSidePanel> with SingleTickerProv
         ),
         const SizedBox(height: 30),
         const Text("Projected Grade", style: TextStyle(color: Colors.grey, fontSize: 12)),
-        const Text("A", style: TextStyle(fontSize: 64, fontWeight: FontWeight.bold, color: Colors.green)),
+        const SizedBox(height: 10),
+        
+        
+        if (showMessage)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 20),
+            child: Text(
+              "Enter Your score to see your grade",
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey, fontSize: 14, fontStyle: FontStyle.italic),
+            ),
+          )
+        else
+          Text(
+            calculatedGrade,
+            style: TextStyle(
+              fontSize: 64, 
+              fontWeight: FontWeight.bold, 
+              color: GradeAestheticService.getGradeColor(calculatedGrade),
+            ),
+          ),
+          
         const SizedBox(height: 30),
         SizedBox(
           width: double.infinity, height: 55,
           child: ElevatedButton(
-            onPressed: () {},
+            onPressed: calculatedGrade == "X" || calculatedGrade == "-" ? null : () {
+              
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blueAccent, 
               foregroundColor: Colors.white,
@@ -184,6 +348,9 @@ class _ReaderSidePanelState extends State<ReaderSidePanel> with SingleTickerProv
   }
 
   Widget _buildClockCard() {
+    bool isTimeUp = isTimer && timerSeconds == 0 && !isRunning;
+    int displaySeconds = isTimer ? timerSeconds : stopwatchSeconds;
+
     return Container(
       margin: const EdgeInsets.all(15),
       padding: const EdgeInsets.all(20),
@@ -197,17 +364,49 @@ class _ReaderSidePanelState extends State<ReaderSidePanel> with SingleTickerProv
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(isTimer ? "EXAM TIMER" : "STOPWATCH", style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.blueAccent, letterSpacing: 1.1)),
-              IconButton(
-                onPressed: () => setState(() { isTimer = !isTimer; seconds = 0; isRunning = false; _ticker?.cancel(); }),
-                icon: const Icon(Icons.sync_alt_outlined, size: 18, color: Colors.blueAccent),
-              )
+              Text(
+                isTimer ? "EXAM TIMER" : "STOPWATCH", 
+                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.blueAccent, letterSpacing: 1.1)
+              ),
+              
+              Visibility(
+                visible: !isRunning,
+                maintainSize: true,
+                maintainAnimation: true,
+                maintainState: true,
+                child: Row(
+                  children: [
+                    
+                    
+                    Opacity(
+                      opacity: isTimer ? 1.0 : 0.0,
+                      child: IconButton(
+                        onPressed: isTimer ? _editTimer : null, 
+                        icon: const Icon(Icons.edit_calendar_outlined, size: 18, color: Colors.blueAccent),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => setState(() => isTimer = !isTimer),
+                      icon: const Icon(Icons.sync_alt_outlined, size: 18, color: Colors.blueAccent),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
-          FittedBox(
-            child: Text(
-              "${(seconds ~/ 3600).toString().padLeft(2, '0')}:${((seconds % 3600) ~/ 60).toString().padLeft(2, '0')}:${(seconds % 60).toString().padLeft(2, '0')}",
-              style: const TextStyle(fontSize: 42, fontWeight: FontWeight.bold, fontFamily: 'monospace'),
+          InkWell(
+            onTap: (isTimer && !isRunning) ? _editTimer : null,
+            borderRadius: BorderRadius.circular(10),
+            child: FittedBox(
+              child: Text(
+                isTimeUp ? "TIME UP!" : "${(displaySeconds ~/ 3600).toString().padLeft(2, '0')}:${((displaySeconds % 3600) ~/ 60).toString().padLeft(2, '0')}:${(displaySeconds % 60).toString().padLeft(2, '0')}",
+                style: TextStyle(
+                  fontSize: 42, 
+                  fontWeight: FontWeight.bold, 
+                  fontFamily: 'monospace',
+                  color: isTimeUp ? Colors.redAccent : Colors.white,
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 15),
@@ -216,7 +415,17 @@ class _ReaderSidePanelState extends State<ReaderSidePanel> with SingleTickerProv
             children: [
               _clockBtn(isRunning ? Icons.pause : Icons.play_arrow, _toggleClock, isRunning ? Colors.orange : Colors.green),
               const SizedBox(width: 15),
-              _clockBtn(Icons.refresh, () => setState(() { seconds = 0; isRunning = false; _ticker?.cancel(); }), Colors.grey),
+              _clockBtn(Icons.refresh, () {
+                setState(() { 
+                  isRunning = false; 
+                  _ticker?.cancel(); 
+                  if (isTimer) {
+                    _parseDurationToSeconds(duration); 
+                  } else {
+                    stopwatchSeconds = 0;
+                  }
+                });
+              }, Colors.grey),
             ],
           )
         ],
