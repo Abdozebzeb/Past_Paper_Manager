@@ -17,6 +17,7 @@ class _ReaderSidePanelState extends State<ReaderSidePanel> with SingleTickerProv
   
   
   bool _isLoading = true;
+  String? _errorMessage;
   String paperName = "Loading...";
   String paperCode = "Loading...";
   String duration = "Loading...";
@@ -31,14 +32,17 @@ class _ReaderSidePanelState extends State<ReaderSidePanel> with SingleTickerProv
   int seconds = 0;
   Timer? _ticker;
 
+  int timerSeconds = 0;
+  int stopwatchSeconds = 0;
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _loadData();
   }
+
   void _editTimer() {
-    
     int h = timerSeconds ~/ 3600;
     int m = (timerSeconds % 3600) ~/ 60;
     
@@ -53,7 +57,7 @@ class _ReaderSidePanelState extends State<ReaderSidePanel> with SingleTickerProv
           borderRadius: BorderRadius.circular(24),
           side: BorderSide(
             color: Colors.blueAccent.withOpacity(0.1),
-            width: 1.0, 
+            width: 1.0,
           ),
         ),
         title: const Text("Set Custom Timer", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueAccent, fontSize: 18)),
@@ -72,7 +76,6 @@ class _ReaderSidePanelState extends State<ReaderSidePanel> with SingleTickerProv
               int newH = int.tryParse(hCtrl.text) ?? 0;
               int newM = int.tryParse(mCtrl.text) ?? 0;
               setState(() {
-                
                 timerSeconds = (newH * 3600) + (newM * 60);
                 isRunning = false;
                 _ticker?.cancel();
@@ -112,32 +115,47 @@ class _ReaderSidePanelState extends State<ReaderSidePanel> with SingleTickerProv
   }
 
   Future<void> _loadData() async {
-    final data = await PaperDataService.getPaperDetails(widget.fileName);
-    if (mounted) {
-      setState(() {
-        paperName = data['name'] ?? "Unknown";
-        paperCode = data['code'] ?? "Unknown";
-        duration = data['duration'] ?? "N/A";
-        rawMarks = data['raw'] ?? "-";
-        thresholds = data['thresholds'] ?? thresholds;
-        _isLoading = false;
-        
-        
-        _parseDurationToSeconds(duration);
-      });
+    try {
+      setState(() => _isLoading = true);
+      final data = await PaperDataService.getPaperDetails(widget.fileName);
+      
+      
+      if (data.isEmpty || data['name'] == "Unknown Syllabus") {
+        throw Exception("The PDF structure is invalid or data could not be extracted.");
+      }
+
+      if (mounted) {
+        setState(() {
+          paperName = data['name'] ?? "Unknown";
+          paperCode = data['code'] ?? "Unknown";
+          duration = data['duration'] ?? "N/A";
+          rawMarks = data['raw'] ?? "-";
+          thresholds = data['thresholds'] ?? thresholds;
+          _isLoading = false;
+          _errorMessage = null;
+          _parseDurationToSeconds(duration);
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = "Invalid or Unsupported PDF File.\nDetails could not be extracted.";
+        });
+      }
     }
   }
 
-    void _parseDurationToSeconds(String dur) {
-      int totalSec = 0;
-      final hMatch = RegExp(r"(\d+)\s*hour").firstMatch(dur);
-      final mMatch = RegExp(r"(\d+)\s*minute").firstMatch(dur);
-      if (hMatch != null) totalSec += int.parse(hMatch.group(1)!) * 3600;
-      if (mMatch != null) totalSec += int.parse(mMatch.group(1)!) * 60;
-      if (totalSec > 0) setState(() => timerSeconds = totalSec);
-    }
+  void _parseDurationToSeconds(String dur) {
+    int totalSec = 0;
+    final hMatch = RegExp(r"(\d+)\s*hour").firstMatch(dur);
+    final mMatch = RegExp(r"(\d+)\s*minute").firstMatch(dur);
+    if (hMatch != null) totalSec += int.parse(hMatch.group(1)!) * 3600;
+    if (mMatch != null) totalSec += int.parse(mMatch.group(1)!) * 60;
+    if (totalSec > 0) setState(() => timerSeconds = totalSec);
+  }
 
-    void _onMarksChanged(String val) {
+  void _onMarksChanged(String val) {
     if (val.isEmpty) {
       setState(() => calculatedGrade = "-");
       return;
@@ -152,9 +170,6 @@ class _ReaderSidePanelState extends State<ReaderSidePanel> with SingleTickerProv
       setState(() => calculatedGrade = PaperDataService.calculateGrade(marks, thresholds));
     }
   }
-
-  int timerSeconds = 0;
-  int stopwatchSeconds = 0;
 
   void _toggleClock() {
     if (isRunning) {
@@ -186,8 +201,34 @@ class _ReaderSidePanelState extends State<ReaderSidePanel> with SingleTickerProv
     super.dispose();
   }
 
+  Widget _buildErrorScreen() {
+    return Container(
+      width: 320, margin: const EdgeInsets.all(12),
+      decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(24), border: Border.all(color: Colors.redAccent.withOpacity(0.2))),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.error_outline, size: 60, color: Colors.redAccent),
+          const SizedBox(height: 20),
+          Text(_errorMessage!, textAlign: TextAlign.center, style: const TextStyle(color: Colors.grey, fontSize: 13)),
+          const SizedBox(height: 30),
+          ElevatedButton(
+            onPressed: _loadData,
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent),
+            child: const Text("Retry Load", style: TextStyle(color: Colors.white)),
+          )
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    
+    if (_errorMessage != null) {
+      return _buildErrorScreen();
+    }
+
     return Container(
       width: 320,
       margin: const EdgeInsets.all(12),
@@ -198,7 +239,6 @@ class _ReaderSidePanelState extends State<ReaderSidePanel> with SingleTickerProv
       ),
       child: Column(
         children: [
-          
           Container(
             height: 50,
             margin: const EdgeInsets.all(15),
@@ -209,7 +249,7 @@ class _ReaderSidePanelState extends State<ReaderSidePanel> with SingleTickerProv
             ),
             child: TabBar(
               controller: _tabController,
-              indicatorSize: TabBarIndicatorSize.tab, 
+              indicatorSize: TabBarIndicatorSize.tab,
               indicator: BoxDecoration(
                 color: Colors.blueAccent, 
                 borderRadius: BorderRadius.circular(12)
@@ -306,7 +346,6 @@ class _ReaderSidePanelState extends State<ReaderSidePanel> with SingleTickerProv
         const Text("Projected Grade", style: TextStyle(color: Colors.grey, fontSize: 12)),
         const SizedBox(height: 10),
         
-        
         if (showMessage)
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 20),
@@ -330,9 +369,7 @@ class _ReaderSidePanelState extends State<ReaderSidePanel> with SingleTickerProv
         SizedBox(
           width: double.infinity, height: 55,
           child: ElevatedButton(
-            onPressed: calculatedGrade == "X" || calculatedGrade == "-" ? null : () {
-              
-            },
+            onPressed: calculatedGrade == "X" || calculatedGrade == "-" ? null : () {},
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blueAccent, 
               foregroundColor: Colors.white,
@@ -368,7 +405,6 @@ class _ReaderSidePanelState extends State<ReaderSidePanel> with SingleTickerProv
                 isTimer ? "EXAM TIMER" : "STOPWATCH", 
                 style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.blueAccent, letterSpacing: 1.1)
               ),
-              
               Visibility(
                 visible: !isRunning,
                 maintainSize: true,
@@ -376,8 +412,6 @@ class _ReaderSidePanelState extends State<ReaderSidePanel> with SingleTickerProv
                 maintainState: true,
                 child: Row(
                   children: [
-                    
-                    
                     Opacity(
                       opacity: isTimer ? 1.0 : 0.0,
                       child: IconButton(

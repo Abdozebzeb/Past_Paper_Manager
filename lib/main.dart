@@ -14,9 +14,12 @@ import 'services/auth_service.dart';
 import 'ui/main_screen.dart';
 import 'ui/auth/login_page.dart';
 import 'ui/auth/acknowledgement_page.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  sqfliteFfiInit();
+  databaseFactory = databaseFactoryFfi;
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   
   
