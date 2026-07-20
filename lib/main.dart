@@ -63,7 +63,15 @@ class MyApp extends StatelessWidget {
         primaryColor: palette.primary,
         scaffoldBackgroundColor: palette.background,
         cardColor: palette.surface,
-        colorScheme: ColorScheme.fromSeed(seedColor: palette.primary, brightness: Brightness.light),
+        // Force the ColorScheme to use your specific palette colors
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: palette.primary, 
+          brightness: Brightness.light,
+        ).copyWith(
+          primary: palette.primary,
+          surface: palette.surface,
+          background: palette.background,
+        ),
       ),
       darkTheme: ThemeData(
         useMaterial3: true,
@@ -71,7 +79,15 @@ class MyApp extends StatelessWidget {
         primaryColor: palette.primary,
         scaffoldBackgroundColor: palette.background,
         cardColor: palette.surface,
-        colorScheme: ColorScheme.fromSeed(seedColor: palette.primary, brightness: Brightness.dark),
+        // Force the ColorScheme to use your specific palette colors
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: palette.primary, 
+          brightness: Brightness.dark,
+        ).copyWith(
+          primary: palette.primary,
+          surface: palette.surface,
+          background: palette.background,
+        ),
       ),
       home: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
@@ -79,27 +95,19 @@ class MyApp extends StatelessWidget {
           if (authSnapshot.connectionState == ConnectionState.waiting) {
             return const Scaffold(body: Center(child: CircularProgressIndicator()));
           }
-
-          
           if (!authSnapshot.hasData || authSnapshot.data == null) {
             return const LoginPage();
           }
-
-          
           return FutureBuilder<bool>(
             future: AppState.isFirstRun(),
             builder: (context, firstRunSnapshot) {
               if (firstRunSnapshot.connectionState == ConnectionState.waiting) {
                 return const Scaffold(body: Center(child: CircularProgressIndicator()));
               }
-              
               if (firstRunSnapshot.data == true) {
                 return const AcknowledgementPage();
               }
-
-              
               AnalyticsService().initializeUser();
-
               return const MainScreen();
             },
           );

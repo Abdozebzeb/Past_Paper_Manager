@@ -86,6 +86,6 @@ class _LoginPageState extends State<LoginPage> {
   }
 }
 
-extension on Theme {
-  Color? get scaffoldBackgroundColor => null;
-}
+// extension on Theme {
+//   Color? get scaffoldBackgroundColor => null;
+// }

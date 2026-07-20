@@ -107,8 +107,8 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-extension on Theme {
-  Color? get cardColor => null;
+// extension on Theme {
+//   Color? get cardColor => null;
   
-  Color? get scaffoldBackgroundColor => null;
-}
+//   Color? get scaffoldBackgroundColor => null;
+// }

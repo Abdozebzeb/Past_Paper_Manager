@@ -325,8 +325,8 @@ By downloading, installing, or using CIE Past Paper Manager, you acknowledge tha
   }
 }
 
-extension on Theme {
-  Color? get scaffoldBackgroundColor => null;
+// extension on Theme {
+//   Color? get scaffoldBackgroundColor => null;
   
-  Color? get cardColor => null;
-}
+//   Color? get cardColor => null;
+// }
