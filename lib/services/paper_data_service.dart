@@ -11,106 +11,104 @@ class PaperDataService {
 
   
   static Future<void> _initDb() async {
-    if (_db != null) return;
+    if (_db != null && _db!.isOpen) return;
     final libPath = await FolderService.getPastPapersPath();
     final dbPath = p.join(libPath, 'TimeTable.db');
 
-    
     if (!File(dbPath).existsSync()) {
-      final url = "https://abdozebzeb.github.io/CIE-Dates-Data/TimeTable.db";
+      // Use the URL from ConfigService
+      final url = ConfigService.timeTableUrl;
       final response = await http.get(Uri.parse(url));
       await File(dbPath).writeAsBytes(response.bodyBytes);
     }
 
-    if (Platform.isWindows || Platform.isMacOS) {
-      databaseFactory = databaseFactoryFfi;
-    }
     _db = await openDatabase(dbPath);
   }
 
+
   static Future<Map<String, dynamic>> getPaperDetails(String fileName) async {
-    await _initDb();
-    
-    
-    
-    final reg = RegExp(r"(\d{4})_([smw])(\d{2})_qp_(\d{2})");
-    final match = reg.firstMatch(fileName);
-    if (match == null) return {};
+    try {
+      await _initDb();
+      
+      final reg = RegExp(r"(\d{4})_([smw])(\d{2})_qp_(\d{2})");
+      final match = reg.firstMatch(fileName);
+      if (match == null) return {};
 
-    String syllabus = match.group(1)!;
-    String suffix = match.group(4)!;
-    String paperCode = "$syllabus/$suffix";
+      String syllabus = match.group(1)!;
+      String suffix = match.group(4)!;
+      String paperCode = "$syllabus/$suffix";
 
-    
-    String paperName = "Unknown Syllabus";
-    final List<Map<String, dynamic>> maps = await _db!.query(
-      'exam_timetable',
-      where: 'code = ?',
-      whereArgs: [paperCode],
-      limit: 1,
-    );
-    if (maps.isNotEmpty) paperName = maps[0]['syllabus_name'];
-
-    
-    final libPath = await FolderService.getPastPapersPath();
-    final qpPath = p.join(libPath, fileName);
-    final gtName = fileName.replaceAll(RegExp(r"_qp_\d{2}"), "_gt");
-    final gtPath = p.join(libPath, gtName);
-
-    
-    if (!File(gtPath).existsSync()) {
-      for (String basePath in ConfigService.downloadPaths) {
-        try {
-          final url = basePath.endsWith('/') ? "$basePath$gtName" : "$basePath/$gtName";
-          final res = await http.get(Uri.parse(url));
-          if (res.statusCode == 200) {
-            await File(gtPath).writeAsBytes(res.bodyBytes);
-            break;
-          }
-        } catch (_) {}
+      String paperName = "Unknown Syllabus";
+      String durationFromDb = "Not Found";
+      
+      final List<Map<String, dynamic>> maps = await _db!.query(
+        'exam_timetable',
+        where: 'code = ?',
+        whereArgs: [paperCode],
+        limit: 1,
+      );
+      
+      if (maps.isNotEmpty) {
+        paperName = maps[0]['syllabus_name'] ?? "Unknown";
+        // Extract duration from DB if column exists (assuming 'duration' column in your SQLite)
+        durationFromDb = maps[0]['duration'] ?? "Not Found"; 
       }
-    }
 
-    String duration = "Not Found";
-    Map<String, String> thresholds = {'A': '-', 'B': '-', 'C': '-', 'D': '-', 'E': '-'};
-    String rawMarks = "-";
+      final libPath = await FolderService.getPastPapersPath();
+      final gtName = fileName.replaceAll(RegExp(r"_qp_\d{2}"), "_gt");
+      final gtPath = p.join(libPath, gtName);
 
-    
-    if (File(qpPath).existsSync()) {
-      final PdfDocument document = PdfDocument(inputBytes: File(qpPath).readAsBytesSync());
-      String text = PdfTextExtractor(document).extractText(startPageIndex: 0, endPageIndex: 0);
-      final durMatch = RegExp(r"(\d+\s*hour[s]?\s*\d*\s*minute[s]?|\d+\s*minute[s]?)", caseSensitive: false).firstMatch(text);
-      if (durMatch != null) duration = durMatch.group(1)!;
-      document.dispose();
-    }
-
-    
-    if (File(gtPath).existsSync()) {
-      final PdfDocument document = PdfDocument(inputBytes: File(gtPath).readAsBytesSync());
-      for (int i = 0; i < document.pages.count; i++) {
-        String text = PdfTextExtractor(document).extractText(startPageIndex: i, endPageIndex: i);
-        
-        final gtMatch = RegExp("Component\\s+$suffix\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)").firstMatch(text);
-        if (gtMatch != null) {
-          rawMarks = gtMatch.group(1)!;
-          thresholds['A'] = gtMatch.group(2)!;
-          thresholds['B'] = gtMatch.group(3)!;
-          thresholds['C'] = gtMatch.group(4)!;
-          thresholds['D'] = gtMatch.group(5)!;
-          thresholds['E'] = gtMatch.group(6)!;
-          break;
+      // Download GT if missing (Logic remains the same)
+      if (!File(gtPath).existsSync()) {
+        for (String basePath in ConfigService.downloadPaths) {
+          try {
+            final url = basePath.endsWith('/') ? "$basePath$gtName" : "$basePath/$gtName";
+            final res = await http.get(Uri.parse(url));
+            if (res.statusCode == 200) {
+              await File(gtPath).writeAsBytes(res.bodyBytes);
+              break;
+            }
+          } catch (_) {}
         }
       }
-      document.dispose();
-    }
 
-    return {
-      'name': paperName,
-      'code': paperCode,
-      'duration': duration,
-      'raw': rawMarks,
-      'thresholds': thresholds
-    };
+      Map<String, String> thresholds = {'A': '-', 'B': '-', 'C': '-', 'D': '-', 'E': '-'};
+      String rawMarks = "-";
+
+      // FAILSAFE: PDF Reading
+      if (File(gtPath).existsSync()) {
+        try {
+          final PdfDocument document = PdfDocument(inputBytes: File(gtPath).readAsBytesSync());
+          for (int i = 0; i < document.pages.count; i++) {
+            String text = PdfTextExtractor(document).extractText(startPageIndex: i, endPageIndex: i);
+            final gtMatch = RegExp("Component\\s+$suffix\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)").firstMatch(text);
+            if (gtMatch != null) {
+              rawMarks = gtMatch.group(1)!;
+              thresholds['A'] = gtMatch.group(2)!;
+              thresholds['B'] = gtMatch.group(3)!;
+              thresholds['C'] = gtMatch.group(4)!;
+              thresholds['D'] = gtMatch.group(5)!;
+              thresholds['E'] = gtMatch.group(6)!;
+              break;
+            }
+          }
+          document.dispose();
+        } catch (e) {
+          print("Failsafe: Could not read GT PDF: $e");
+        }
+      }
+
+      return {
+        'name': paperName,
+        'code': paperCode,
+        'duration': durationFromDb, // Now prioritizes DB
+        'raw': rawMarks,
+        'thresholds': thresholds
+      };
+    } catch (e) {
+      print("Global Failsafe in getPaperDetails: $e");
+      return {};
+    }
   }
 
   static String calculateGrade(int marks, Map<String, String> thresholds) {

@@ -246,10 +246,13 @@ The first public release of CIE Past Paper Manager, providing students with a st
         children: [
           _sectionTitle("Appearance"),
           _settingsCard(
-            ListTile(
-              title: const Text("Theme Mode"),
-              subtitle: Text(isDark ? "Dark Mode Enabled" : "Light Mode Enabled"),
-              trailing: Switch(value: isDark, onChanged: (v) => settings.toggleTheme(v)),
+            Material(
+              color: Colors.transparent,
+              child: ListTile(
+                title: const Text("Theme Mode"),
+                subtitle: Text(isDark ? "Dark Mode Enabled" : "Light Mode Enabled"),
+                trailing: Switch(value: isDark, onChanged: (v) => settings.toggleTheme(v)),
+              ),
             ),
           ),
           
@@ -293,18 +296,24 @@ The first public release of CIE Past Paper Manager, providing students with a st
           _settingsCard(
             Column(
               children: [
-                ListTile(
-                  leading: const Icon(Icons.unarchive, color: Colors.blueAccent),
-                  title: const Text("Export Library"),
-                  subtitle: const Text("Backup your papers to a folder"),
-                  onTap: _handleExport,
+                Material(
+                  color: Colors.transparent,
+                  child: ListTile(
+                    leading: const Icon(Icons.unarchive, color: Colors.blueAccent),
+                    title: const Text("Export Library"),
+                    subtitle: const Text("Backup your papers to a folder"),
+                    onTap: _handleExport,
+                  ),
                 ),
                 const Divider(height: 1, color: Colors.white10),
-                ListTile(
-                  leading: const Icon(Icons.system_update_alt, color: Colors.blueAccent),
-                  title: const Text("Import Papers"),
-                  subtitle: const Text("Add PDF files from your PC"),
-                  onTap: _handleImport,
+                Material(
+                  color: Colors.transparent,
+                  child: ListTile(
+                    leading: const Icon(Icons.system_update_alt, color: Colors.blueAccent),
+                    title: const Text("Import Papers"),
+                    subtitle: const Text("Add PDF files from your PC"),
+                    onTap: _handleImport,
+                  ),
                 ),
               ],
             ),
@@ -312,30 +321,36 @@ The first public release of CIE Past Paper Manager, providing students with a st
           const SizedBox(height: 25),
           _sectionTitle("Support"),
           _settingsCard(
-            ListTile(
-              leading: const Icon(Icons.info_outline, color: Colors.blueAccent),
-              title: const Text("About Manager"),
-              onTap: () => _showAboutSheet(context),
+            Material(
+              color: Colors.transparent,
+              child: ListTile(
+                leading: const Icon(Icons.info_outline, color: Colors.blueAccent),
+                title: const Text("About Manager"),
+                onTap: () => _showAboutSheet(context),
+              ),
             ),
           ),
           const SizedBox(height: 25),
           
           _sectionTitle("Account"),
           _settingsCard(
-            ListTile(
-              leading: const Icon(Icons.logout, color: Colors.redAccent),
-              title: const Text("Logout", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
-              subtitle: const Text("Sign out of your Google Account"),
-              onTap: () async {
-                await AuthService().signOut(); 
-                
-                if (context.mounted) {
-                  Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
-                    MaterialPageRoute(builder: (context) => const LoginPage()),
-                    (route) => false,
-                  );
-                }
-              },
+            Material(
+              color: Colors.transparent,
+              child: ListTile(
+                leading: const Icon(Icons.logout, color: Colors.redAccent),
+                title: const Text("Logout", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+                subtitle: const Text("Sign out of your Google Account"),
+                onTap: () async {
+                  await AuthService().signOut(); 
+                  
+                  if (context.mounted) {
+                    Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (context) => const LoginPage()),
+                      (route) => false,
+                    );
+                  }
+                },
+              ),
             ),
           ),
           if (_isProcessing) const Padding(padding: EdgeInsets.all(20), child: Center(child: CircularProgressIndicator())),

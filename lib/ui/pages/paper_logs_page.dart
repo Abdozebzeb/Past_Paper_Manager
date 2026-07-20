@@ -78,14 +78,19 @@ class _PaperLogsPageState extends State<PaperLogsPage> {
               var parts = code.split('/');
               String newCodeName = "${parts[0]}_$s${year}_qp_${parts[1]}";
               
-              
               final details = await PaperDataService.getPaperDetails("${newCodeName}.pdf");
               int? marks = int.tryParse(marksCtrl.text);
+              int? maxMarks = int.tryParse(details['raw'] ?? "");
               
               setDialogState(() {
                 codeName = newCodeName;
-                if (marks != null && details['thresholds'] != null) {
-                  calculatedGrade = PaperDataService.calculateGrade(marks, details['thresholds']);
+                if (marks != null) {
+                  // Validation: 0 <= marks <= maxMarks
+                  if (marks < 0 || (maxMarks != null && marks > maxMarks)) {
+                    calculatedGrade = "X";
+                  } else if (details['thresholds'] != null) {
+                    calculatedGrade = PaperDataService.calculateGrade(marks, details['thresholds']);
+                  }
                 }
               });
             }
@@ -417,20 +422,12 @@ class _PaperLogsPageState extends State<PaperLogsPage> {
               ),
               const SizedBox(width: 10),
             ],
+            // Inside _logTableRow -> children list:
             Expanded(flex: 3, child: Text(log.dateCompleted, style: const TextStyle(fontSize: 13))),
             Expanded(flex: 2, child: Text(log.code, style: const TextStyle(fontWeight: FontWeight.bold))),
             Expanded(flex: 3, child: Text(log.codeName, style: const TextStyle(color: Colors.grey, fontSize: 12))),
-            Expanded(flex: 2, child: Text("${log.rawMarks} / ${log.duration}", style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 14))),
-            Expanded(
-              flex: 1,
-              child: Center(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(color: GradeAestheticService.getGradeColor(log.grade).withOpacity(0.12), borderRadius: BorderRadius.circular(8)),
-                  child: Text(log.grade, style: TextStyle(color: GradeAestheticService.getGradeColor(log.grade), fontWeight: FontWeight.bold, fontSize: 13)),
-                ),
-              ),
-            ),
+            Expanded(flex: 1, child: Text(log.duration, style: const TextStyle(color: Colors.grey, fontSize: 13))), // New Duration Col
+            Expanded(flex: 1, child: Text("${log.rawMarks}", style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 14))),
           ],
         ),
       ),

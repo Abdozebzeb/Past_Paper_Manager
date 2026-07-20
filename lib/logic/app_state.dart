@@ -1,13 +1,12 @@
-import 'package:shared_preferences/shared_preferences.dart';
+import '../services/log_service.dart';
 
 class AppState {
   static Future<bool> isFirstRun() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool('firstRun') ?? true;
+    final val = await LogService.getPref('firstRun');
+    return val == null; // If null, it's the first run
   }
 
   static Future<void> setNotFirstRun() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('firstRun', false);
+    await LogService.setPref('firstRun', 'false');
   }
 }
