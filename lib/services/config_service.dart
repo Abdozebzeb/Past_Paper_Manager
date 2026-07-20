@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
+import 'log_service.dart';
 
 class ConfigService {
   
@@ -33,8 +33,7 @@ class ConfigService {
           debugPrint("Config: Loaded timeTableUrl: $timeTableUrl");
         }
         
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setInt('data_version', data['DataVersion'] ?? 1);
+        await LogService.setPref('data_version', (data['DataVersion'] ?? 1).toString());
       } else {
         debugPrint("Config: No document found at settings/config in Firestore.");
       }

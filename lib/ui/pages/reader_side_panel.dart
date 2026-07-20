@@ -3,6 +3,10 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import '../../services/paper_data_service.dart';
 import '../../services/grade_aesthetic_service.dart';
+import 'package:uuid/uuid.dart';
+import 'package:intl/intl.dart';
+import '../../logic/log_model.dart';
+import '../../services/log_service.dart';
 
 class ReaderSidePanel extends StatefulWidget {
   final String fileName;
@@ -116,34 +120,65 @@ class _ReaderSidePanelState extends State<ReaderSidePanel> with SingleTickerProv
 
   Future<void> _loadData() async {
     try {
+      if (!mounted) return;
       setState(() => _isLoading = true);
       final data = await PaperDataService.getPaperDetails(widget.fileName);
       
-      
       if (data.isEmpty || data['name'] == "Unknown Syllabus") {
-        throw Exception("The PDF structure is invalid or data could not be extracted.");
+        throw Exception("Invalid data");
       }
 
       if (mounted) {
         setState(() {
           paperName = data['name'] ?? "Unknown";
           paperCode = data['code'] ?? "Unknown";
-          duration = data['duration'] ?? "N/A";
+          duration = data['duration'] ?? "0 minutes";
           rawMarks = data['raw'] ?? "-";
           thresholds = data['thresholds'] ?? thresholds;
           _isLoading = false;
           _errorMessage = null;
-          _parseDurationToSeconds(duration);
+          
+          // Reset clocks
+          isRunning = false;
+          _ticker?.cancel();
+          stopwatchSeconds = 0;
+          
+          // Initialize timer to standard duration
+          int parsedSeconds = _convertDurationToSeconds(duration);
+          timerSeconds = parsedSeconds; 
+          isTimer = true; 
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _errorMessage = "Invalid or Unsupported PDF File.\nDetails could not be extracted.";
+          _errorMessage = "Invalid or Unsupported PDF File.";
         });
       }
     }
+  }
+
+  // Improved parser for various duration formats
+  int _convertDurationToSeconds(String dur) {
+    int totalSec = 0;
+    // Matches "1 hour", "1hr", "1 h"
+    final hMatch = RegExp(r"(\d+)\s*(?:hour|hr|h)", caseSensitive: false).firstMatch(dur);
+    // Matches "45 minutes", "45min", "45 m"
+    final mMatch = RegExp(r"(\d+)\s*(?:minute|min|m\b)", caseSensitive: false).firstMatch(dur);
+
+    if (hMatch != null) totalSec += int.parse(hMatch.group(1)!) * 3600;
+    if (mMatch != null) totalSec += int.parse(mMatch.group(1)!) * 60;
+    
+    return totalSec > 0 ? totalSec : 3600; // Default to 1 hour if parsing fails
+  }
+
+  String _formatDuration(int totalSeconds) {
+    int h = totalSeconds ~/ 3600;
+    int m = (totalSeconds % 3600) ~/ 60;
+    int s = totalSeconds % 60;
+    if (h > 0) return "${h}h ${m}m ${s}s";
+    return "${m}m ${s}s";
   }
 
   void _parseDurationToSeconds(String dur) {
@@ -366,15 +401,50 @@ class _ReaderSidePanelState extends State<ReaderSidePanel> with SingleTickerProv
           ),
           
         const SizedBox(height: 30),
+        // Inside _buildGradingTab
         SizedBox(
           width: double.infinity, height: 55,
           child: ElevatedButton(
-            onPressed: calculatedGrade == "X" || calculatedGrade == "-" ? null : () {},
+            onPressed: (calculatedGrade == "X" || calculatedGrade == "-") ? null : () async {
+              // Calculate dynamic duration for the log
+              String loggedDuration;
+              int standardSec = _convertDurationToSeconds(duration);
+
+              if (!isTimer && stopwatchSeconds > 0) {
+                // If stopwatch was used
+                loggedDuration = _formatDuration(stopwatchSeconds);
+              } else if (isTimer && timerSeconds < standardSec) {
+                // If timer was used (Standard - Remaining)
+                loggedDuration = _formatDuration(standardSec - timerSeconds);
+              } else {
+                // Default to standard duration string if no clock was used
+                loggedDuration = duration;
+              }
+
+              final newLog = PaperLog(
+                id: const Uuid().v4(),
+                dateCompleted: DateFormat('dd MMMM yyyy').format(DateTime.now()),
+                duration: loggedDuration,
+                code: paperCode,
+                codeName: widget.fileName.replaceAll('.pdf', ''),
+                year: widget.fileName.split('_')[1].substring(1),
+                season: widget.fileName.split('_')[1].startsWith('s') ? "Summer" : "Winter",
+                scoredMarks: int.tryParse(_marksController.text) ?? 0,
+                rawMarks: int.tryParse(rawMarks) ?? 0,
+                grade: calculatedGrade,
+              );
+
+              await LogService.saveLog(newLog);
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Paper Logged Successfully!"))
+                );
+              }
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blueAccent, 
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-              elevation: 0,
             ),
             child: const Text("Log Paper", style: TextStyle(fontWeight: FontWeight.bold)),
           ),
@@ -385,7 +455,9 @@ class _ReaderSidePanelState extends State<ReaderSidePanel> with SingleTickerProv
   }
 
   Widget _buildClockCard() {
-    bool isTimeUp = isTimer && timerSeconds == 0 && !isRunning;
+    // Only show "TIME UP" if timer is 0 AND we have a valid parsed duration > 0
+    int standardSec = _convertDurationToSeconds(duration);
+    bool isTimeUp = isTimer && timerSeconds == 0 && standardSec > 0 && !isRunning;
     int displaySeconds = isTimer ? timerSeconds : stopwatchSeconds;
 
     return Container(
@@ -394,7 +466,7 @@ class _ReaderSidePanelState extends State<ReaderSidePanel> with SingleTickerProv
       decoration: BoxDecoration(
         color: Colors.blueAccent.withOpacity(0.07),
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: Colors.blueAccent.withOpacity(0.1))
+        border: Border.all(color: Colors.blueAccent.withOpacity(0.1)),
       ),
       child: Column(
         children: [
@@ -403,7 +475,12 @@ class _ReaderSidePanelState extends State<ReaderSidePanel> with SingleTickerProv
             children: [
               Text(
                 isTimer ? "EXAM TIMER" : "STOPWATCH", 
-                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.blueAccent, letterSpacing: 1.1)
+                style: const TextStyle(
+                  fontSize: 10, 
+                  fontWeight: FontWeight.bold, 
+                  color: Colors.blueAccent, 
+                  letterSpacing: 1.1,
+                ),
               ),
               Visibility(
                 visible: !isRunning,
@@ -461,7 +538,7 @@ class _ReaderSidePanelState extends State<ReaderSidePanel> with SingleTickerProv
                 });
               }, Colors.grey),
             ],
-          )
+          ),
         ],
       ),
     );

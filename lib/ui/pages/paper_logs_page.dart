@@ -59,6 +59,7 @@ class _PaperLogsPageState extends State<PaperLogsPage> {
     String selectedSeason = "Summer";
     String codeName = "____ ___ qp __";
     String calculatedGrade = "-";
+    String extractedRawMarks = "-"; // Local variable to store extracted max marks
     
     final TextEditingController codeCtrl = TextEditingController();
     final TextEditingController yearCtrl = TextEditingController();
@@ -68,7 +69,6 @@ class _PaperLogsPageState extends State<PaperLogsPage> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) {
-          
           Future<void> updateCalculations() async {
             String code = codeCtrl.text;
             String year = yearCtrl.text;
@@ -79,17 +79,17 @@ class _PaperLogsPageState extends State<PaperLogsPage> {
               String newCodeName = "${parts[0]}_$s${year}_qp_${parts[1]}";
               
               final details = await PaperDataService.getPaperDetails("${newCodeName}.pdf");
-              int? marks = int.tryParse(marksCtrl.text);
-              int? maxMarks = int.tryParse(details['raw'] ?? "");
+              int? inputScoredMarks = int.tryParse(marksCtrl.text);
+              int? maxRawMarks = int.tryParse(details['raw'] ?? "");
               
               setDialogState(() {
                 codeName = newCodeName;
-                if (marks != null) {
-                  // Validation: 0 <= marks <= maxMarks
-                  if (marks < 0 || (maxMarks != null && marks > maxMarks)) {
+                extractedRawMarks = details['raw'] ?? "-";
+                if (inputScoredMarks != null) {
+                  if (inputScoredMarks < 0 || (maxRawMarks != null && inputScoredMarks > maxRawMarks)) {
                     calculatedGrade = "X";
                   } else if (details['thresholds'] != null) {
-                    calculatedGrade = PaperDataService.calculateGrade(marks, details['thresholds']);
+                    calculatedGrade = PaperDataService.calculateGrade(inputScoredMarks, details['thresholds']);
                   }
                 }
               });
@@ -98,7 +98,7 @@ class _PaperLogsPageState extends State<PaperLogsPage> {
 
           return AlertDialog(
             backgroundColor: Theme.of(context).cardColor,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24), side: BorderSide(color: Colors.blueAccent.withOpacity(0.1))),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24), side: BorderSide(color: Colors.blueAccent.withAlpha(25))),
             title: const Text("Manual Paper Log", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueAccent)),
             content: SingleChildScrollView(
               child: Column(
@@ -158,7 +158,7 @@ class _PaperLogsPageState extends State<PaperLogsPage> {
                         ),
                       ))),
                       const SizedBox(width: 12),
-                      Expanded(child: _dialogInput("Raw Marks", TextField(
+                      Expanded(child: _dialogInput("Scored Marks", TextField(
                         controller: marksCtrl,
                         onChanged: (_) => updateCalculations(),
                         decoration: const InputDecoration(border: InputBorder.none, hintText: "00"),
@@ -169,10 +169,11 @@ class _PaperLogsPageState extends State<PaperLogsPage> {
                   const SizedBox(height: 20),
                   Container(
                     width: double.infinity, padding: const EdgeInsets.all(15),
-                    decoration: BoxDecoration(color: Colors.blueAccent.withOpacity(0.05), borderRadius: BorderRadius.circular(15)),
+                    decoration: BoxDecoration(color: Colors.blueAccent.withAlpha(12), borderRadius: BorderRadius.circular(15)),
                     child: Column(
                       children: [
                         _summaryRow("Generated File Name", codeName),
+                        _summaryRow("Total Paper Marks (Raw)", extractedRawMarks),
                         const SizedBox(height: 8),
                         _summaryRow("Calculated Grade", calculatedGrade, isBold: true, gradeColor: GradeAestheticService.getGradeColor(calculatedGrade)),
                       ],
@@ -193,7 +194,8 @@ class _PaperLogsPageState extends State<PaperLogsPage> {
                     codeName: codeName,
                     year: yearCtrl.text,
                     season: selectedSeason,
-                    rawMarks: int.tryParse(marksCtrl.text) ?? 0,
+                    scoredMarks: int.tryParse(marksCtrl.text) ?? 0,
+                    rawMarks: int.tryParse(extractedRawMarks) ?? 0,
                     grade: calculatedGrade,
                   );
                   await LogService.saveLog(newLog);
@@ -333,7 +335,8 @@ class _PaperLogsPageState extends State<PaperLogsPage> {
           _prettyHeader("Date", flex: 3, icon: Icons.calendar_today, type: 'date'),
           _prettyHeader("Syllabus", flex: 2, icon: Icons.tag, type: 'filter'),
           _prettyHeader("Code Name", flex: 3, icon: Icons.description, type: 'none'),
-          _prettyHeader("Marks", flex: 2, icon: Icons.bar_chart, type: 'sort'),
+          _prettyHeader("Duration", flex: 2, icon: Icons.timer, type: 'none'), // Added Duration
+          _prettyHeader("Score", flex: 2, icon: Icons.bar_chart, type: 'sort'),
           _prettyHeader("Grade", flex: 1, icon: Icons.workspace_premium, type: 'grade'),
         ],
       ),
@@ -422,12 +425,21 @@ class _PaperLogsPageState extends State<PaperLogsPage> {
               ),
               const SizedBox(width: 10),
             ],
-            // Inside _logTableRow -> children list:
-            Expanded(flex: 3, child: Text(log.dateCompleted, style: const TextStyle(fontSize: 13))),
-            Expanded(flex: 2, child: Text(log.code, style: const TextStyle(fontWeight: FontWeight.bold))),
+            Expanded(flex: 3, child: Text(log.dateCompleted, style: const TextStyle(fontSize: 12))),
+            Expanded(flex: 2, child: Text(log.code, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13))),
             Expanded(flex: 3, child: Text(log.codeName, style: const TextStyle(color: Colors.grey, fontSize: 12))),
-            Expanded(flex: 1, child: Text(log.duration, style: const TextStyle(color: Colors.grey, fontSize: 13))), // New Duration Col
-            Expanded(flex: 1, child: Text("${log.rawMarks}", style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 14))),
+            Expanded(flex: 2, child: Text(log.duration, style: const TextStyle(color: Colors.grey, fontSize: 12))),
+            Expanded(flex: 2, child: Text("${log.scoredMarks} / ${log.rawMarks}", style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold))),
+            Expanded(
+              flex: 1,
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(color: GradeAestheticService.getGradeColor(log.grade).withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
+                  child: Text(log.grade, style: TextStyle(color: GradeAestheticService.getGradeColor(log.grade), fontWeight: FontWeight.bold, fontSize: 12)),
+                ),
+              ),
+            ),
           ],
         ),
       ),

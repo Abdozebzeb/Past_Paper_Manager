@@ -1,25 +1,23 @@
 import 'dart:io';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'log_service.dart';
 
 class AnalyticsService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   Future<String?> getStoredUserId() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('user_id');
+    return await LogService.getPref('user_id');
   }
 
   Future<void> initializeUser() async {
     final User? user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
-    final prefs = await SharedPreferences.getInstance();
     
     String cleanId = (user.email ?? "unknown").replaceAll('.', '_');
-    await prefs.setString('user_id', cleanId);
+    await LogService.setPref('user_id', cleanId);
 
     String deviceType = "Unknown";
     if (Platform.isWindows) deviceType = "Windows";

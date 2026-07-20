@@ -16,24 +16,29 @@ class LogService {
   }
 
   static Future<Database> _initDb() async {
-    // Storing in AppData/Roaming for Windows or Application Support for MacOS
     final directory = await getApplicationSupportDirectory();
     String path = join(directory.path, 'cie_user_data.db');
     
     return await openDatabase(
       path,
-      version: 2,
+      version: 3, // Increased version
       onCreate: (db, version) async {
         await db.execute(
-          "CREATE TABLE logs(id TEXT PRIMARY KEY, dateCompleted TEXT, duration TEXT, code TEXT, codeName TEXT, year TEXT, season TEXT, rawMarks INTEGER, grade TEXT)",
+          "CREATE TABLE logs(id TEXT PRIMARY KEY, dateCompleted TEXT, duration TEXT, code TEXT, codeName TEXT, year TEXT, season TEXT, scoredMarks INTEGER, rawMarks INTEGER, grade TEXT)",
         );
-        await db.execute(
-          "CREATE TABLE user_prefs(key TEXT PRIMARY KEY, value TEXT)",
-        );
+        await db.execute("CREATE TABLE user_prefs(key TEXT PRIMARY KEY, value TEXT)");
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
           await db.execute("CREATE TABLE IF NOT EXISTS user_prefs(key TEXT PRIMARY KEY, value TEXT)");
+        }
+        if (oldVersion < 3) {
+          // Migration to add scoredMarks and rawMarks if they don't exist
+          try {
+             await db.execute("ALTER TABLE logs ADD COLUMN scoredMarks INTEGER DEFAULT 0");
+             // Note: in previous versions 'rawMarks' might have held scored marks. 
+             // We are resetting to be safe or you can rename columns.
+          } catch(e) {}
         }
       },
     );

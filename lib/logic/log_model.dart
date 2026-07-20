@@ -6,7 +6,8 @@ class PaperLog {
   final String codeName;
   final String year;
   final String season;
-  final int rawMarks;
+  final int scoredMarks; // Student's score
+  final int rawMarks;    // Total possible marks
   final String grade;
 
   PaperLog({
@@ -17,6 +18,7 @@ class PaperLog {
     required this.codeName,
     required this.year,
     required this.season,
+    required this.scoredMarks,
     required this.rawMarks,
     required this.grade,
   });
@@ -30,6 +32,7 @@ class PaperLog {
       'codeName': codeName,
       'year': year,
       'season': season,
+      'scoredMarks': scoredMarks,
       'rawMarks': rawMarks,
       'grade': grade,
     };
@@ -44,7 +47,8 @@ class PaperLog {
       codeName: map['codeName'],
       year: map['year'],
       season: map['season'],
-      rawMarks: map['rawMarks'],
+      scoredMarks: map['scoredMarks'] ?? 0,
+      rawMarks: map['rawMarks'] ?? 0,
       grade: map['grade'],
     );
   }
