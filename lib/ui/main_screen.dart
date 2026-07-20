@@ -69,7 +69,7 @@ class _MainScreenState extends State<MainScreen> {
           children: [
             Stack(
               children: [
-                Icon(icon, color: isSelected ? Colors.blueAccent : Colors.grey, size: 28),
+                Icon(icon, color: isSelected ? Theme.of(context).primaryColor : Colors.grey, size: 28),
                 if (badge != null && badge > 0)
                   Positioned(
                     right: 0, 
@@ -81,7 +81,7 @@ class _MainScreenState extends State<MainScreen> {
                   ),
               ],
             ),
-            Text(label, style: TextStyle(fontSize: 10, color: isSelected ? Colors.blueAccent : Colors.grey)),
+            Text(label, style: TextStyle(fontSize: 10, color: isSelected ? Theme.of(context).primaryColor : Colors.grey)),
           ],
         ),
       ),

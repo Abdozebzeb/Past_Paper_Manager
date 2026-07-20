@@ -18,14 +18,14 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0F1C),
+      backgroundColor:  Theme.of(context).scaffoldBackgroundColor,
       body: Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 40),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.auto_awesome, size: 80, color: Colors.blueAccent),
+              Icon(Icons.auto_awesome, size: 80, color: Theme.of(context).primaryColor),
               const SizedBox(height: 24),
               const Text("CIE Manager", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white)),
               const Text("Sign in to manage your past papers", style: TextStyle(color: Colors.grey)),
@@ -35,7 +35,7 @@ class _LoginPageState extends State<LoginPage> {
                 height: 55,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blueAccent,
+                    backgroundColor: Theme.of(context).primaryColor,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),
@@ -84,4 +84,8 @@ class _LoginPageState extends State<LoginPage> {
       ),
     );
   }
+}
+
+extension on Theme {
+  Color? get scaffoldBackgroundColor => null;
 }

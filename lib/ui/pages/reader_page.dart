@@ -54,7 +54,7 @@ class _ReaderPageState extends State<ReaderPage> {
                       Text(reader.openFiles[index].name, 
                         style: TextStyle(
                           fontSize: 11, 
-                          color: isSelected ? Colors.blueAccent : Colors.grey, 
+                          color: isSelected ? Theme.of(context).primaryColor : Colors.grey, 
                           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal
                         )
                       ),
@@ -123,7 +123,7 @@ class _ReaderPageState extends State<ReaderPage> {
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                                 child: Text(
                                   "${currentFile.currentPage} / ${currentFile.totalPages}",
-                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blueAccent),
+                                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor),
                                 ),
                               ),
                             ),
@@ -154,7 +154,7 @@ class _ReaderPageState extends State<ReaderPage> {
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.blueAccent.withAlpha(40)),
+        border: Border.all(color: Theme.of(context).primaryColor.withAlpha(40)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withAlpha(60), 
@@ -190,7 +190,7 @@ class _ReaderPageState extends State<ReaderPage> {
 
   Widget _zoomBtn(IconData icon, VoidCallback onPressed) {
     return IconButton(
-      icon: Icon(icon, size: 20, color: Colors.blueAccent), 
+      icon: Icon(icon, size: 20, color: Theme.of(context).primaryColor), 
       onPressed: onPressed, 
       constraints: const BoxConstraints(minWidth: 38, minHeight: 38), 
       padding: EdgeInsets.zero

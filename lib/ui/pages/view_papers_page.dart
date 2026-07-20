@@ -88,12 +88,12 @@ class _ViewPapersPageState extends State<ViewPapersPage> {
               decoration: BoxDecoration(
                 color: Theme.of(context).cardColor, 
                 borderRadius: BorderRadius.circular(20), 
-                border: Border.all(color: Colors.blueAccent.withOpacity(0.1))
+                border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.1))
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text("Filter Papers", style: TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 14)),
+                  Text("Filter Papers", style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold, fontSize: 14)),
                   const SizedBox(height: 25),
                   Center(
                     child: Wrap(
@@ -114,7 +114,7 @@ class _ViewPapersPageState extends State<ViewPapersPage> {
                         child: SizedBox(height: 55, 
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blueAccent, 
+                              backgroundColor: Theme.of(context).primaryColor, 
                               foregroundColor: Colors.white, 
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)), 
                               elevation: 0
@@ -144,7 +144,7 @@ class _ViewPapersPageState extends State<ViewPapersPage> {
   Widget _moreOptionsButton(LibraryProvider lib) {
     return Container(
       height: 55, width: 55,
-      decoration: BoxDecoration(color: Colors.blueAccent, borderRadius: BorderRadius.circular(14)),
+      decoration: BoxDecoration(color: Theme.of(context).primaryColor, borderRadius: BorderRadius.circular(14)),
       child: PopupMenuButton<String>(
         icon: const Icon(Icons.arrow_drop_down, color: Colors.white, size: 30),
         onSelected: (val) => _openPaperLogic(lib, overrideType: val),
@@ -164,9 +164,9 @@ class _ViewPapersPageState extends State<ViewPapersPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: Colors.blueAccent.withOpacity(0.05), 
+        color: Theme.of(context).primaryColor.withOpacity(0.05), 
         borderRadius: BorderRadius.circular(30), 
-        border: Border.all(color: Colors.blueAccent.withOpacity(0.2))
+        border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.2))
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
@@ -189,7 +189,7 @@ class _ViewPapersPageState extends State<ViewPapersPage> {
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor, 
         borderRadius: BorderRadius.circular(20), 
-        border: Border.all(color: Colors.blueAccent.withOpacity(0.1))
+        border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.1))
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -206,12 +206,12 @@ class _ViewPapersPageState extends State<ViewPapersPage> {
             onTap: () => FolderService.openFolder(lib.folderPath),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), 
-              decoration: BoxDecoration(color: Colors.blueAccent.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
-              child: const Row(
+              decoration: BoxDecoration(color: Theme.of(context).primaryColor.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+              child: Row(
                 children: [
-                  Icon(Icons.folder_open, size: 16, color: Colors.blueAccent), 
-                  SizedBox(width: 8), 
-                  Text("Past Papers", style: TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 12))
+                  Icon(Icons.folder_open, size: 16, color: Theme.of(context).primaryColor), 
+                  const SizedBox(width: 8), 
+                  Text("Past Papers", style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold, fontSize: 12))
                 ]
               ),
             ),

@@ -9,6 +9,7 @@ import '../../services/folder_service.dart';
 import '../../services/auth_service.dart';
 import '../auth/login_page.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../services/accent_service.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -262,28 +263,61 @@ The first public release of CIE Past Paper Manager, providing students with a st
             Theme(
               data: Theme.of(context).copyWith(dividerColor: Colors.transparent), 
               child: ExpansionTile(
-                leading: const Icon(Icons.palette_outlined, color: Colors.blueAccent),
+                leading: Icon(Icons.palette_outlined, color: settings.current.primary),
                 title: const Text("Color Accent"),
-                subtitle: const Text("Current: Ocean Blue", style: TextStyle(fontSize: 12, color: Colors.grey)),
+                subtitle: Text("Current: ${settings.accentName}", 
+                    style: const TextStyle(fontSize: 12, color: Colors.grey)),
                 children: [
                   Container(
-                    height: 80, 
+                    width: double.infinity,
                     margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.blueAccent.withOpacity(0.05),
+                      color: settings.current.subtle,
                       borderRadius: BorderRadius.circular(15),
                     ),
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          _colorPalette("Ocean Blue", [Colors.blue, Colors.blueAccent, Colors.lightBlue]),
-                          _colorPalette("Sunset Red", [Colors.red, Colors.redAccent, Colors.orange]),
-                          _colorPalette("Forest Green", [Colors.green, Colors.greenAccent, Colors.teal]),
-                          _colorPalette("Royal Purple", [Colors.purple, Colors.purpleAccent, Colors.deepPurple]),
-                        ],
-                      ),
+                    child: Wrap(
+                      spacing: 15,
+                      runSpacing: 15,
+                      children: AccentService.palettes.keys.map((name) {
+                        final pal = AccentService.getPalette(name, isDark);
+                        bool isSelected = settings.accentName == name;
+                        
+                        return GestureDetector(
+                          onTap: () => settings.setAccent(name),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 60,
+                                height: 45,
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: isSelected ? pal.primary : Colors.transparent,
+                                    width: 2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(10),
+                                  color: Colors.black12,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(child: Container(decoration: BoxDecoration(color: pal.background, borderRadius: const BorderRadius.only(topLeft: Radius.circular(4), bottomLeft: Radius.circular(4))))),
+                                    Expanded(child: Container(color: pal.surface)),
+                                    Expanded(child: Container(decoration: BoxDecoration(color: pal.primary, borderRadius: const BorderRadius.only(topRight: Radius.circular(4), bottomRight: Radius.circular(4))))),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 5),
+                              Text(name, style: TextStyle(
+                                fontSize: 10, 
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                color: isSelected ? settings.current.primary : Colors.grey
+                              )),
+                            ],
+                          ),
+                        );
+                      }).toList(),
                     ),
                   )
                 ],
@@ -299,7 +333,7 @@ The first public release of CIE Past Paper Manager, providing students with a st
                 Material(
                   color: Colors.transparent,
                   child: ListTile(
-                    leading: const Icon(Icons.unarchive, color: Colors.blueAccent),
+                    leading: Icon(Icons.unarchive, color: Theme.of(context).primaryColor),
                     title: const Text("Export Library"),
                     subtitle: const Text("Backup your papers to a folder"),
                     onTap: _handleExport,
@@ -309,7 +343,7 @@ The first public release of CIE Past Paper Manager, providing students with a st
                 Material(
                   color: Colors.transparent,
                   child: ListTile(
-                    leading: const Icon(Icons.system_update_alt, color: Colors.blueAccent),
+                    leading: Icon(Icons.system_update_alt, color: Theme.of(context).primaryColor),
                     title: const Text("Import Papers"),
                     subtitle: const Text("Add PDF files from your PC"),
                     onTap: _handleImport,
@@ -324,7 +358,7 @@ The first public release of CIE Past Paper Manager, providing students with a st
             Material(
               color: Colors.transparent,
               child: ListTile(
-                leading: const Icon(Icons.info_outline, color: Colors.blueAccent),
+                leading: Icon(Icons.info_outline, color: Theme.of(context).primaryColor),
                 title: const Text("About Manager"),
                 onTap: () => _showAboutSheet(context),
               ),
@@ -359,10 +393,10 @@ The first public release of CIE Past Paper Manager, providing students with a st
     );
   }
 
-  Widget _sectionTitle(String t) => Padding(padding: const EdgeInsets.only(left: 10, bottom: 10), child: Text(t, style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 13)));
+  Widget _sectionTitle(String t) => Padding(padding: const EdgeInsets.only(left: 10, bottom: 10), child: Text(t, style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold, fontSize: 13)));
 
   Widget _settingsCard(Widget child) => Container(
-    decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.blueAccent.withAlpha(30))),
+    decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(20), border: Border.all(color: Theme.of(context).primaryColor.withAlpha(30))),
     child: child,
   );
 
@@ -403,15 +437,15 @@ The first public release of CIE Past Paper Manager, providing students with a st
             data: versionNotesContent, 
             styleSheet: MarkdownStyleSheet(
               p: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color, fontSize: 14),
-              h1: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold),
-              listBullet: const TextStyle(color: Colors.blueAccent),
+              h1: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold),
+              listBullet: TextStyle(color: Theme.of(context).primaryColor),
             ),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context), 
-            child: const Text("Close", style: TextStyle(color: Colors.blueAccent))
+            child: Text("Close", style: TextStyle(color: Theme.of(context).primaryColor))
           )
         ],
       ),
@@ -439,7 +473,7 @@ The first public release of CIE Past Paper Manager, providing students with a st
               height: 55,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blueAccent,
+                  backgroundColor: Theme.of(context).primaryColor,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   elevation: 0,
@@ -472,7 +506,7 @@ The first public release of CIE Past Paper Manager, providing students with a st
     );
   }
 
-  Widget _infoRow(String l, String v) => Padding(padding: const EdgeInsets.symmetric(vertical: 5), child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text(l, style: const TextStyle(color: Colors.grey)), Text(v, style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold))]));
+  Widget _infoRow(String l, String v) => Padding(padding: const EdgeInsets.symmetric(vertical: 5), child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text(l, style: const TextStyle(color: Colors.grey)), Text(v, style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold))]));
 
   Future<void> _handleExport() async {
     String? dest = await FilePicker.platform.getDirectoryPath();

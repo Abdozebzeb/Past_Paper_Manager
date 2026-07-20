@@ -98,8 +98,8 @@ class _PaperLogsPageState extends State<PaperLogsPage> {
 
           return AlertDialog(
             backgroundColor: Theme.of(context).cardColor,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24), side: BorderSide(color: Colors.blueAccent.withAlpha(25))),
-            title: const Text("Manual Paper Log", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueAccent)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24), side: BorderSide(color: Theme.of(context).primaryColor.withAlpha(25))),
+            title: Text("Manual Paper Log", style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor)),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -169,7 +169,7 @@ class _PaperLogsPageState extends State<PaperLogsPage> {
                   const SizedBox(height: 20),
                   Container(
                     width: double.infinity, padding: const EdgeInsets.all(15),
-                    decoration: BoxDecoration(color: Colors.blueAccent.withAlpha(12), borderRadius: BorderRadius.circular(15)),
+                    decoration: BoxDecoration(color: Theme.of(context).primaryColor.withAlpha(12), borderRadius: BorderRadius.circular(15)),
                     child: Column(
                       children: [
                         _summaryRow("Generated File Name", codeName),
@@ -202,7 +202,7 @@ class _PaperLogsPageState extends State<PaperLogsPage> {
                   _loadLogs();
                   if (context.mounted) Navigator.pop(context);
                 },
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).primaryColor, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
                 child: const Text("Save Log", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
               ),
             ],
@@ -239,11 +239,11 @@ class _PaperLogsPageState extends State<PaperLogsPage> {
             icon: Icon(
               _selectionMode ? Icons.close : Icons.edit_note, 
               size: 18, 
-              color: _selectionMode ? Colors.grey : Colors.blueAccent
+              color: _selectionMode ? Colors.grey : Theme.of(context).primaryColor
             ),
             label: Text(
               _selectionMode ? "Cancel" : "Select Logs", 
-              style: TextStyle(color: _selectionMode ? Colors.grey : Colors.blueAccent)
+              style: TextStyle(color: _selectionMode ? Colors.grey : Theme.of(context).primaryColor)
             ),
           ),
           const SizedBox(width: 15),
@@ -280,7 +280,7 @@ class _PaperLogsPageState extends State<PaperLogsPage> {
               onPressed: _showManualLogDialog,
               icon: const Icon(Icons.add, size: 22),
               label: const Text("Log a Paper", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))),
+              style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).primaryColor, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))),
             ),
           ),
           const SizedBox(width: 15),
@@ -291,7 +291,7 @@ class _PaperLogsPageState extends State<PaperLogsPage> {
                 controller: _searchController,
                 decoration: InputDecoration(
                   hintText: "Search your examination history...",
-                  prefixIcon: const Icon(Icons.search, color: Colors.blueAccent, size: 20),
+                  prefixIcon: Icon(Icons.search, color: Theme.of(context).primaryColor, size: 20),
                   filled: true, fillColor: Theme.of(context).cardColor,
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
                 ),
@@ -368,7 +368,7 @@ class _PaperLogsPageState extends State<PaperLogsPage> {
                await showMenu(
                  context: context, position: position, color: Theme.of(context).cardColor,
                  constraints: const BoxConstraints(minWidth: 150),
-                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15), side: BorderSide(color: Colors.blueAccent.withOpacity(0.2))),
+                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15), side: BorderSide(color: Theme.of(context).primaryColor.withOpacity(0.2))),
                  items: _getFilterItems(type),
                );
             }
@@ -377,7 +377,7 @@ class _PaperLogsPageState extends State<PaperLogsPage> {
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
             child: Row(
               children: [
-                Icon(icon, size: 16, color: Colors.blueAccent),
+                Icon(icon, size: 16, color: Theme.of(context).primaryColor),
                 const SizedBox(width: 10),
                 Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white70)),
                 if (type != 'none' && type != 'date') const Icon(Icons.keyboard_arrow_down, size: 16, color: Colors.white38),
@@ -411,16 +411,16 @@ class _PaperLogsPageState extends State<PaperLogsPage> {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.blueAccent.withOpacity(0.05) : Theme.of(context).cardColor,
+          color: isSelected ? Theme.of(context).primaryColor.withOpacity(0.05) : Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: isSelected ? Colors.blueAccent : Colors.blueAccent.withOpacity(0.08)),
+          border: Border.all(color: isSelected ? Theme.of(context).primaryColor : Theme.of(context).primaryColor.withOpacity(0.08)),
         ),
         child: Row(
           children: [
             if (_selectionMode) ...[
               Checkbox(
                 value: isSelected, 
-                activeColor: Colors.blueAccent,
+                activeColor: Theme.of(context).primaryColor,
                 onChanged: (v) => setState(() => v! ? _selectedIds.add(log.id) : _selectedIds.remove(log.id))
               ),
               const SizedBox(width: 10),
@@ -429,7 +429,7 @@ class _PaperLogsPageState extends State<PaperLogsPage> {
             Expanded(flex: 2, child: Text(log.code, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13))),
             Expanded(flex: 3, child: Text(log.codeName, style: const TextStyle(color: Colors.grey, fontSize: 12))),
             Expanded(flex: 2, child: Text(log.duration, style: const TextStyle(color: Colors.grey, fontSize: 12))),
-            Expanded(flex: 2, child: Text("${log.scoredMarks} / ${log.rawMarks}", style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold))),
+            Expanded(flex: 2, child: Text("${log.scoredMarks} / ${log.rawMarks}", style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold))),
             Expanded(
               flex: 1,
               child: Center(
@@ -450,7 +450,7 @@ class _PaperLogsPageState extends State<PaperLogsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 10, color: Colors.blueAccent, fontWeight: FontWeight.bold, letterSpacing: 0.5)),
+        Text(label, style: TextStyle(fontSize: 10, color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold, letterSpacing: 0.5)),
         const SizedBox(height: 6),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -475,7 +475,7 @@ class _PaperLogsPageState extends State<PaperLogsPage> {
     return await showDatePicker(
       context: context, initialDate: initial, firstDate: DateTime(2000), lastDate: DateTime.now(),
       builder: (context, child) => Theme(
-        data: Theme.of(context).copyWith(colorScheme: ColorScheme.dark(primary: Colors.blueAccent, surface: Theme.of(context).cardColor)),
+        data: Theme.of(context).copyWith(colorScheme: ColorScheme.dark(primary: Theme.of(context).primaryColor, surface: Theme.of(context).cardColor)),
         child: child!,
       ),
     );
@@ -485,7 +485,7 @@ class _PaperLogsPageState extends State<PaperLogsPage> {
     return await showTimePicker(
       context: context, initialTime: const TimeOfDay(hour: 1, minute: 45),
       builder: (context, child) => Theme(
-        data: Theme.of(context).copyWith(colorScheme: ColorScheme.dark(primary: Colors.blueAccent, surface: Theme.of(context).cardColor)),
+        data: Theme.of(context).copyWith(colorScheme: ColorScheme.dark(primary: Theme.of(context).primaryColor, surface: Theme.of(context).cardColor)),
         child: child!,
       ),
     );

@@ -9,16 +9,14 @@ class AboutPage extends StatelessWidget {
     final uri = Uri.parse(url);
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Could not open link")));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Could not open link")));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0F1C),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text("About"),
         backgroundColor: Colors.transparent,
@@ -31,49 +29,30 @@ class AboutPage extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF161D2D),
+                  color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.blueAccent.withAlpha(75)),
+                  border: Border.all(color: Theme.of(context).primaryColor.withAlpha(75)),
                 ),
                 child: Column(
                   children: [
-                    
-                    
-                    
-                    
-                    
                     const SizedBox(height: 15),
-                    const Text(
-                      "Abdullah Zeb",
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const Text(
-                      "Yapper & Student",
-                      style: TextStyle(color: Colors.grey),
-                    ),
+                    const Text("Abdullah Zeb", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
+                    const Text("Yapper & Student", style: TextStyle(color: Colors.grey)),
                     const Divider(height: 30, color: Colors.white10),
 
-                    _infoRow("App Version", "1.0.4.2"),
-                    _infoRow("Version Release Date", "2/5/2026"),
-                    _infoRow("Build Type", "Release (Windows)"),
-                    _infoRow("Latest Patch", "Patch #2"),
-                    _infoRow("Patch Release Date", "8/7/2026"),
+                    _infoRow(context, "App Version", "1.0.4.2"),
+                    _infoRow(context, "Version Release Date", "2/5/2026"),
+                    _infoRow(context, "Build Type", "Release (Windows)"),
+                    _infoRow(context, "Latest Patch", "Patch #2"),
+                    _infoRow(context, "Patch Release Date", "8/7/2026"),
 
                     const SizedBox(height: 20),
-                    const Text(
+                    Text(
                       "Version Notes:",
-                      style: TextStyle(
-                        color: Colors.blueAccent,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold),
                     ),
                     const Text(
                       "Initial release with Sidebar Navigation, \nPaper Filtering, and Downloader Support.",
@@ -83,45 +62,22 @@ class AboutPage extends StatelessWidget {
                   ],
                 ),
               ),
-
               const SizedBox(height: 30),
-
-              
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  
                   IconButton(
-                    icon: const FaIcon(
-                      FontAwesomeIcons.github,
-                      color: Colors.white70,
-                      size: 28,
-                    ),
-                    onPressed: () =>
-                        _launchURL(context, "https://github.com/Abdozebzeb"),
-                    hoverColor: Colors.blueAccent.withAlpha(25),
+                    icon: const FaIcon(FontAwesomeIcons.github, color: Colors.white70, size: 28),
+                    onPressed: () => _launchURL(context, "https://github.com/Abdozebzeb"),
+                    hoverColor: Theme.of(context).primaryColor.withAlpha(25),
                   ),
                   const SizedBox(width: 20),
-                  
                   IconButton(
-                    icon: const FaIcon(
-                      FontAwesomeIcons.instagram,
-                      color: Colors.white70,
-                      size: 28,
-                    ),
-                    onPressed: () => _launchURL(
-                      context,
-                      "https://www.instagram.com/abdullahhzeb/",
-                    ),
-                    hoverColor: Colors.blueAccent.withAlpha(25),
+                    icon: const FaIcon(FontAwesomeIcons.instagram, color: Colors.white70, size: 28),
+                    onPressed: () => _launchURL(context, "https://www.instagram.com/abdullahhzeb/"),
+                    hoverColor: Theme.of(context).primaryColor.withAlpha(25),
                   ),
                 ],
-              ),
-
-              const SizedBox(height: 40),
-              const Text(
-                "Created with ❤️ for Students, By Abdullah Zeb",
-                style: TextStyle(color: Colors.grey, fontSize: 12),
               ),
             ],
           ),
@@ -130,21 +86,14 @@ class AboutPage extends StatelessWidget {
     );
   }
 
-  
-  Widget _infoRow(String label, String value) {
+  Widget _infoRow(BuildContext context, String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: const TextStyle(color: Colors.white70)),
-          Text(
-            value,
-            style: const TextStyle(
-              color: Colors.blueAccent,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          Text(value, style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold)),
         ],
       ),
     );

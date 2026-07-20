@@ -52,7 +52,7 @@ class _HomePageState extends State<HomePage> {
     bool isSelectionComplete = (subject != null && series != null && year != null && type != null) && (type == "gt" || paper != null);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0F1C),
+      backgroundColor:  Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text("Past Papers", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.transparent, elevation: 0, centerTitle: true,
@@ -80,7 +80,7 @@ class _HomePageState extends State<HomePage> {
                     final match = papers.firstWhere((p) => p.subject == subject && p.series == series && p.year == year && p.type == type && (type == "gt" || p.paper == paper));
                     FileOpenService.openFile(match.path);
                   },
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent),
+                  style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).primaryColor),
                   child: const Text("Open Paper", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
               ),
@@ -95,7 +95,7 @@ class _HomePageState extends State<HomePage> {
   Widget _buildDropdown(String label, String? value, List<String> items, Function(String) onCh) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14),
-      decoration: BoxDecoration(color: const Color(0xFF161D2D), borderRadius: BorderRadius.circular(30), border: Border.all(color: Colors.blueAccent.withAlpha(100))),
+      decoration: BoxDecoration(color:  Theme.of(context).cardColor, borderRadius: BorderRadius.circular(30), border: Border.all(color: Theme.of(context).primaryColor.withAlpha(100))),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: value, hint: Text(label, style: const TextStyle(color: Colors.grey, fontSize: 13)),
@@ -105,4 +105,10 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+}
+
+extension on Theme {
+  Color? get cardColor => null;
+  
+  Color? get scaffoldBackgroundColor => null;
 }

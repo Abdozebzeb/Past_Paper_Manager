@@ -18,14 +18,14 @@ class DebugPanel extends StatelessWidget {
       margin: EdgeInsets.only(top: 20),
       decoration: BoxDecoration(
         color: Colors.blue.withOpacity(0.1),
-        border: Border.all(color: Colors.blueAccent),
+        border: Border.all(color: Theme.of(context).primaryColor),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Column(
         children: [
           Text(
             "Add Your Files",
-            style: TextStyle(color: Colors.blueAccent),
+            style: TextStyle(color: Theme.of(context).primaryColor),
           ),
 
           SizedBox(height: 10),

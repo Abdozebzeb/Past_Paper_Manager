@@ -52,6 +52,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settings = Provider.of<SettingsProvider>(context);
+    final palette = settings.current;
     
     return MaterialApp(
       debugShowCheckedModeBanner: false,
@@ -59,15 +60,18 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         brightness: Brightness.light,
-        primaryColor: Colors.blueAccent,
-        scaffoldBackgroundColor: const Color(0xFFF5F7FA),
+        primaryColor: palette.primary,
+        scaffoldBackgroundColor: palette.background,
+        cardColor: palette.surface,
+        colorScheme: ColorScheme.fromSeed(seedColor: palette.primary, brightness: Brightness.light),
       ),
       darkTheme: ThemeData(
         useMaterial3: true,
         brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF0A0F1C),
-        primaryColor: Colors.blueAccent,
-        cardColor: const Color(0xFF161D2D),
+        primaryColor: palette.primary,
+        scaffoldBackgroundColor: palette.background,
+        cardColor: palette.surface,
+        colorScheme: ColorScheme.fromSeed(seedColor: palette.primary, brightness: Brightness.dark),
       ),
       home: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),

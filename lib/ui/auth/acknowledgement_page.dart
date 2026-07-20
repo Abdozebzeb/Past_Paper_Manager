@@ -274,7 +274,7 @@ By downloading, installing, or using CIE Past Paper Manager, you acknowledge tha
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0F1C),
+      backgroundColor:  Theme.of(context).scaffoldBackgroundColor,
       body: Padding(
         padding: const EdgeInsets.all(40),
         child: Column(
@@ -283,15 +283,15 @@ By downloading, installing, or using CIE Past Paper Manager, you acknowledge tha
               child: Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF161D2D), 
+                  color:  Theme.of(context).cardColor, 
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.blueAccent.withOpacity(0.1))
+                  border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.1))
                 ),
                 child: Markdown(
                   data: content, 
                   styleSheet: MarkdownStyleSheet(
                     p: const TextStyle(color: Colors.white70, fontSize: 14),
-                    h1: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold),
+                    h1: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold),
                   )
                 ),
               ),
@@ -302,7 +302,7 @@ By downloading, installing, or using CIE Past Paper Manager, you acknowledge tha
               height: 55, 
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blueAccent,
+                  backgroundColor: Theme.of(context).primaryColor,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
@@ -323,4 +323,10 @@ By downloading, installing, or using CIE Past Paper Manager, you acknowledge tha
       ),
     );
   }
+}
+
+extension on Theme {
+  Color? get scaffoldBackgroundColor => null;
+  
+  Color? get cardColor => null;
 }

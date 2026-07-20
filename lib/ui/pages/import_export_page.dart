@@ -75,7 +75,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
     return Card(
       color: Theme.of(context).cardColor,
       child: ListTile(
-        leading: Icon(icon, color: Colors.blueAccent),
+        leading: Icon(icon, color: Theme.of(context).primaryColor),
         title: Text(title), subtitle: Text(sub),
         trailing: _isProcessing ? const CircularProgressIndicator() : const Icon(Icons.chevron_right),
         onTap: _isProcessing ? null : action,

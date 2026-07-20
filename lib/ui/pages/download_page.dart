@@ -56,7 +56,7 @@ class _DownloadPageState extends State<DownloadPage> {
 
           Center(
             child: IconButton(
-              icon: Icon(Icons.add_circle_outline, color: Colors.blueAccent.withOpacity(0.5), size: 32),
+              icon: Icon(Icons.add_circle_outline, color: Theme.of(context).primaryColor.withOpacity(0.5), size: 32),
               onPressed: () => setState(() => _jobs.add(DownloadJob(subjects: [], startYear: 20, endYear: 25, papers: ["2", "4", "6"], variants: ["1", "2", "3"], types: ["qp", "ms"]))),
             ),
           ),
@@ -79,11 +79,11 @@ class _DownloadPageState extends State<DownloadPage> {
                           backgroundColor: Theme.of(context).dividerColor.withOpacity(0.1),
                           minHeight: 8,
                           borderRadius: BorderRadius.circular(10),
-                          color: controller.progress >= 1.0 ? Colors.green : Colors.blueAccent,
+                          color: controller.progress >= 1.0 ? Colors.green : Theme.of(context).primaryColor,
                         ),
                         const SizedBox(height: 10),
                         Text("${(controller.progress * 100).toStringAsFixed(0)}%", 
-                          style: TextStyle(fontWeight: FontWeight.bold, color: controller.progress >= 1.0 ? Colors.green : Colors.blueAccent)),
+                          style: TextStyle(fontWeight: FontWeight.bold, color: controller.progress >= 1.0 ? Colors.green : Theme.of(context).primaryColor)),
                       ],
                     ),
                   ),
@@ -118,7 +118,7 @@ class _DownloadPageState extends State<DownloadPage> {
             height: 55,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blueAccent, 
+                backgroundColor: Theme.of(context).primaryColor, 
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                 elevation: 0,
@@ -154,7 +154,7 @@ class _DownloadPageState extends State<DownloadPage> {
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor, 
         borderRadius: BorderRadius.circular(20), 
-        border: Border.all(color: Colors.blueAccent.withOpacity(0.1))
+        border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.1))
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -162,7 +162,7 @@ class _DownloadPageState extends State<DownloadPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("Download Job #${index + 1}", style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold)),
+              Text("Download Job #${index + 1}", style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold)),
               if (index != 0) IconButton(onPressed: () => setState(() => _jobs.removeAt(index)), icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20)),
             ],
           ),
@@ -194,7 +194,7 @@ class _DownloadPageState extends State<DownloadPage> {
               children: [
                 Checkbox(
                   value: job.types.contains(t),
-                  activeColor: Colors.blueAccent,
+                  activeColor: Theme.of(context).primaryColor,
                   onChanged: (v) => setState(() => v! ? job.types.add(t) : job.types.remove(t)),
                 ),
                 Text(t.toUpperCase(), style: const TextStyle(fontSize: 13)),
@@ -213,7 +213,7 @@ class _DownloadPageState extends State<DownloadPage> {
       style: const TextStyle(fontSize: 14),
       decoration: InputDecoration(
         labelText: label, labelStyle: const TextStyle(color: Colors.grey, fontSize: 12),
-        filled: true, fillColor: Colors.blueAccent.withOpacity(0.05),
+        filled: true, fillColor: Theme.of(context).primaryColor.withOpacity(0.05),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       ),
@@ -226,12 +226,12 @@ class _DownloadPageState extends State<DownloadPage> {
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor, 
         borderRadius: BorderRadius.circular(20), 
-        border: Border.all(color: Colors.blueAccent.withOpacity(0.1))
+        border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.1))
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 13)),
+          Text(title, style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold, fontSize: 13)),
           const SizedBox(height: 15),
           child,
         ],

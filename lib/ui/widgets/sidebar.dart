@@ -18,7 +18,7 @@ class Sidebar extends StatelessWidget {
       extended: isExtended,
       backgroundColor: const Color(0xFF0D121F), 
       unselectedIconTheme: const IconThemeData(color: Colors.grey),
-      selectedIconTheme: const IconThemeData(color: Colors.blueAccent),
+      selectedIconTheme: IconThemeData(color: Theme.of(context).primaryColor),
       selectedIndex: selectedIndex,
       onDestinationSelected: onItemSelected,
       labelType: isExtended ? NavigationRailLabelType.none : NavigationRailLabelType.all,

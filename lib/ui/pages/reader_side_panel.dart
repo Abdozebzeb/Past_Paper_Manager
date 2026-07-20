@@ -106,8 +106,8 @@ class _ReaderSidePanelState extends State<ReaderSidePanel> with SingleTickerProv
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Theme.of(context).cardColor,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24), side: BorderSide(color: Colors.blueAccent.withAlpha(25))),
-        title: const Text("Set Custom Timer", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueAccent, fontSize: 18)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24), side: BorderSide(color: Theme.of(context).primaryColor.withAlpha(25))),
+        title: Text("Set Custom Timer", style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor, fontSize: 18)),
         content: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -126,7 +126,7 @@ class _ReaderSidePanelState extends State<ReaderSidePanel> with SingleTickerProv
               });
               Navigator.pop(context);
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+            style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).primaryColor, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
             child: const Text("Set Time", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           ),
         ],
@@ -165,7 +165,7 @@ class _ReaderSidePanelState extends State<ReaderSidePanel> with SingleTickerProv
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.blueAccent.withAlpha(30)),
+        border: Border.all(color: Theme.of(context).primaryColor.withAlpha(30)),
       ),
       child: Column(
         children: [
@@ -177,7 +177,7 @@ class _ReaderSidePanelState extends State<ReaderSidePanel> with SingleTickerProv
             child: TabBar(
               controller: _tabController,
               indicatorSize: TabBarIndicatorSize.tab,
-              indicator: BoxDecoration(color: Colors.blueAccent, borderRadius: BorderRadius.circular(12)),
+              indicator: BoxDecoration(color: Theme.of(context).primaryColor, borderRadius: BorderRadius.circular(12)),
               dividerColor: Colors.transparent,
               labelColor: Colors.white,
               unselectedLabelColor: Colors.grey,
@@ -213,7 +213,7 @@ class _ReaderSidePanelState extends State<ReaderSidePanel> with SingleTickerProv
         _infoField("Standard Duration", state.duration),
         _infoField("Raw Marks", state.rawMarks), 
         const SizedBox(height: 10),
-        const Text("Grade Thresholds", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blueAccent)),
+        Text("Grade Thresholds", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor)),
         const SizedBox(height: 12),
         _thresholdRow(state),
         const SizedBox(height: 20),
@@ -225,15 +225,15 @@ class _ReaderSidePanelState extends State<ReaderSidePanel> with SingleTickerProv
     return Container(
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: Colors.blueAccent.withAlpha(15), 
+        color: Theme.of(context).primaryColor.withAlpha(15), 
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.blueAccent.withAlpha(20))
+        border: Border.all(color: Theme.of(context).primaryColor.withAlpha(20))
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: state.thresholds.entries.map((e) => Column(
           children: [
-            Text(e.key, style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 12)),
+            Text(e.key, style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold, fontSize: 12)),
             const SizedBox(height: 5),
             Text(e.value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
           ],
@@ -254,7 +254,7 @@ class _ReaderSidePanelState extends State<ReaderSidePanel> with SingleTickerProv
           decoration: InputDecoration(
             labelText: "Scored Marks",
             hintText: state.rawMarks != "-" ? "Max: ${state.rawMarks}" : "Enter marks",
-            filled: true, fillColor: Colors.blueAccent.withAlpha(15),
+            filled: true, fillColor: Theme.of(context).primaryColor.withAlpha(15),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
           ),
           keyboardType: TextInputType.number,
@@ -298,7 +298,7 @@ class _ReaderSidePanelState extends State<ReaderSidePanel> with SingleTickerProv
               await LogService.saveLog(newLog);
               if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Paper Logged Successfully!")));
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
+            style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).primaryColor, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
             child: const Text("Log Paper", style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ),
@@ -315,20 +315,20 @@ class _ReaderSidePanelState extends State<ReaderSidePanel> with SingleTickerProv
     return Container(
       margin: const EdgeInsets.all(15),
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: Colors.blueAccent.withAlpha(20), borderRadius: BorderRadius.circular(22), border: Border.all(color: Colors.blueAccent.withAlpha(30))),
+      decoration: BoxDecoration(color: Theme.of(context).primaryColor.withAlpha(20), borderRadius: BorderRadius.circular(22), border: Border.all(color: Theme.of(context).primaryColor.withAlpha(30))),
       child: Column(
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(state.isTimer ? "EXAM TIMER" : "STOPWATCH", style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.blueAccent, letterSpacing: 1.1)),
+              Text(state.isTimer ? "EXAM TIMER" : "STOPWATCH", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor, letterSpacing: 1.1)),
               Visibility(
                 visible: !state.isRunning,
                 maintainSize: true, maintainAnimation: true, maintainState: true,
                 child: Row(
                   children: [
-                    Opacity(opacity: state.isTimer ? 1.0 : 0.0, child: IconButton(onPressed: state.isTimer ? () => _editTimer(state) : null, icon: const Icon(Icons.edit_calendar_outlined, size: 18, color: Colors.blueAccent))),
-                    IconButton(onPressed: () => setState(() => state.isTimer = !state.isTimer), icon: const Icon(Icons.sync_alt_outlined, size: 18, color: Colors.blueAccent)),
+                    Opacity(opacity: state.isTimer ? 1.0 : 0.0, child: IconButton(onPressed: state.isTimer ? () => _editTimer(state) : null, icon: Icon(Icons.edit_calendar_outlined, size: 18, color: Theme.of(context).primaryColor))),
+                    IconButton(onPressed: () => setState(() => state.isTimer = !state.isTimer), icon: Icon(Icons.sync_alt_outlined, size: 18, color: Theme.of(context).primaryColor)),
                   ],
                 ),
               ),
@@ -376,7 +376,7 @@ class _ReaderSidePanelState extends State<ReaderSidePanel> with SingleTickerProv
     return Column(
       mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 10, color: Colors.blueAccent, fontWeight: FontWeight.bold)),
+        Text(label, style: TextStyle(fontSize: 10, color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold)),
         const SizedBox(height: 5),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12),
