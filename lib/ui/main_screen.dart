@@ -14,7 +14,7 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-    Widget _getPage(int index) {
+  Widget _getPage(int index) {
     switch (index) {
       case 0: return const ViewPapersPage();
       case 1: return const DownloadPage();
@@ -34,6 +34,7 @@ class _MainScreenState extends State<MainScreen> {
     return Scaffold(
       body: Row(
         children: [
+          // Sidebar - Restored to 80px width
           Container(
             width: 80,
             color: Theme.of(context).cardColor,
@@ -59,30 +60,66 @@ class _MainScreenState extends State<MainScreen> {
 
   Widget _navItem(IconData icon, int index, String label, ReaderController reader, {int? badge}) {
     bool isSelected = reader.mainMenuIndex == index;
+    
     return GestureDetector(
       onTap: () => reader.setMenuIndex(index),
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 10),
-        width: double.infinity,
-        color: Colors.transparent,
-        child: Column(
-          children: [
-            Stack(
-              children: [
-                Icon(icon, color: isSelected ? Theme.of(context).primaryColor : Colors.grey, size: 28),
-                if (badge != null && badge > 0)
-                  Positioned(
-                    right: 0, 
-                    child: CircleAvatar(
-                      radius: 7, 
-                      backgroundColor: Colors.red, 
-                      child: Text(badge.toString(), style: const TextStyle(fontSize: 9, color: Colors.white))
-                    )
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          // Uniform size: 60x60 Rounded Square
+          width: 60,
+          height: 60,
+          decoration: BoxDecoration(
+            color: isSelected ? Theme.of(context).primaryColor : Colors.transparent,
+            borderRadius: BorderRadius.circular(12), // Rounded Square (not a pill)
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Icon(
+                    icon, 
+                    color: isSelected ? Colors.white : Colors.grey, 
+                    size: 24
                   ),
-              ],
-            ),
-            Text(label, style: TextStyle(fontSize: 10, color: isSelected ? Theme.of(context).primaryColor : Colors.grey)),
-          ],
+                  if (badge != null && badge > 0)
+                    Positioned(
+                      top: -4, 
+                      right: -8,
+                      child: Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          color: isSelected ? Colors.white : Colors.redAccent,
+                          shape: BoxShape.circle,
+                        ),
+                        constraints: const BoxConstraints(minWidth: 14, minHeight: 14),
+                        child: Text(
+                          badge.toString(), 
+                          style: TextStyle(
+                            fontSize: 9, 
+                            fontWeight: FontWeight.bold, 
+                            color: isSelected ? Theme.of(context).primaryColor : Colors.white
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                label, 
+                style: TextStyle(
+                  fontSize: 10, 
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  color: isSelected ? Colors.white : Colors.grey
+                )
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -24,7 +24,7 @@ class OpenedFile {
   int currentPage;
   int totalPages;
   final PdfViewerController controller;
-  final FilePanelState panelState; // Side panel data preserved here
+  final FilePanelState panelState;
 
   OpenedFile({
     required this.name,
@@ -110,6 +110,28 @@ class ReaderController extends ChangeNotifier {
       _currentTabIndex = _openFiles.isEmpty ? 0 : _openFiles.length - 1;
     }
     notifyListeners();
+  }
+
+  void closeAllTabs() {
+    _openFiles.clear();
+    _currentTabIndex = 0;
+    notifyListeners();
+  }
+
+  void closeOthers(int index) {
+    final file = _openFiles[index];
+    _openFiles.clear();
+    _openFiles.add(file);
+    _currentTabIndex = 0;
+    notifyListeners();
+  }
+
+  void closeToRight(int index) {
+    if (index < _openFiles.length - 1) {
+      _openFiles.removeRange(index + 1, _openFiles.length);
+      if (_currentTabIndex >= _openFiles.length) _currentTabIndex = _openFiles.length - 1;
+      notifyListeners();
+    }
   }
 
   void setTab(int index) {

@@ -257,6 +257,7 @@ The first public release of CIE Past Paper Manager, providing students with a st
             ),
           ),
           
+
           const SizedBox(height: 25),
           _sectionTitle("Personalization"),
           _settingsCard(
@@ -279,6 +280,9 @@ The first public release of CIE Past Paper Manager, providing students with a st
                     child: Wrap(
                       spacing: 15,
                       runSpacing: 15,
+                      // FIXED: Aligned the entries to the center
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: AccentService.palettes.keys.map((name) {
                         final pal = AccentService.getPalette(name, isDark);
                         bool isSelected = settings.accentName == name;
