@@ -4,14 +4,15 @@ import 'dart:io';
 import 'package:google_sign_in/google_sign_in.dart' as google_mobile;
 import 'package:google_sign_in_all_platforms/google_sign_in_all_platforms.dart' as google_desktop;
 import 'log_service.dart';
+import '../app_config.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   static final google_desktop.GoogleSignIn _desktopSignIn = google_desktop.GoogleSignIn(
     params: google_desktop.GoogleSignInParams(
-      clientId: "your_client_id",
-      clientSecret: "your_client_secret",
+      clientId: AppConfig.clientId,
+      clientSecret: AppConfig.clientSecret,
       redirectPort: 8080,
       scopes: ['email', 'profile'],
     ),

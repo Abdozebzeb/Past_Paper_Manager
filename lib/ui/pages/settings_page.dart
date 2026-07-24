@@ -10,6 +10,7 @@ import '../../services/auth_service.dart';
 import '../auth/login_page.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../services/accent_service.dart';
+import '../../app_config.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -468,9 +469,10 @@ The first public release of CIE Past Paper Manager, providing students with a st
             const Text("CIE Past Paper Manager", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
             const Text("Created by Abdullah Zeb", style: TextStyle(color: Colors.grey)),
             const Divider(height: 40, color: Colors.white10),
-            _infoRow("App Version", "2.0.0.0"),
-            _infoRow("Version Release Date", "11/7/2026"),
-            _infoRow("Build Type", "Release"),
+            _infoRow("App Version", AppConfig.appVersion),
+            _infoRow("Version Release Date", AppConfig.versionReleaseDate),
+            //_infoRow("Patch Release Date", AppConfig.patchReleaseDate),
+            _infoRow("Build Type", AppConfig.buildType),
             const SizedBox(height: 25),
             SizedBox(
               width: double.infinity,
