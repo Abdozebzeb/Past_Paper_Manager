@@ -248,13 +248,10 @@ The first public release of CIE Past Paper Manager, providing students with a st
         children: [
           _sectionTitle("Appearance"),
           _settingsCard(
-            Material(
-              color: Colors.transparent,
-              child: ListTile(
-                title: const Text("Theme Mode"),
-                subtitle: Text(isDark ? "Dark Mode Enabled" : "Light Mode Enabled"),
-                trailing: Switch(value: isDark, onChanged: (v) => settings.toggleTheme(v)),
-              ),
+            ListTile(
+              title: const Text("Theme Mode"),
+              subtitle: Text(isDark ? "Dark Mode Enabled" : "Light Mode Enabled"),
+              trailing: Switch(value: isDark, onChanged: (v) => settings.toggleTheme(v)),
             ),
           ),
           
@@ -335,24 +332,18 @@ The first public release of CIE Past Paper Manager, providing students with a st
           _settingsCard(
             Column(
               children: [
-                Material(
-                  color: Colors.transparent,
-                  child: ListTile(
-                    leading: Icon(Icons.unarchive, color: Theme.of(context).primaryColor),
-                    title: const Text("Export Library"),
-                    subtitle: const Text("Backup your papers to a folder"),
-                    onTap: _handleExport,
-                  ),
+                ListTile(
+                  leading: Icon(Icons.unarchive, color: Theme.of(context).primaryColor),
+                  title: const Text("Export Library"),
+                  subtitle: const Text("Backup your papers to a folder"),
+                  onTap: _handleExport,
                 ),
                 const Divider(height: 1, color: Colors.white10),
-                Material(
-                  color: Colors.transparent,
-                  child: ListTile(
-                    leading: Icon(Icons.system_update_alt, color: Theme.of(context).primaryColor),
-                    title: const Text("Import Papers"),
-                    subtitle: const Text("Add PDF files from your PC"),
-                    onTap: _handleImport,
-                  ),
+                ListTile(
+                  leading: Icon(Icons.system_update_alt, color: Theme.of(context).primaryColor),
+                  title: const Text("Import Papers"),
+                  subtitle: const Text("Add PDF files from your PC"),
+                  onTap: _handleImport,
                 ),
               ],
             ),
@@ -401,8 +392,17 @@ The first public release of CIE Past Paper Manager, providing students with a st
   Widget _sectionTitle(String t) => Padding(padding: const EdgeInsets.only(left: 10, bottom: 10), child: Text(t, style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold, fontSize: 13)));
 
   Widget _settingsCard(Widget child) => Container(
-    decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(20), border: Border.all(color: Theme.of(context).primaryColor.withAlpha(30))),
-    child: child,
+    margin: const EdgeInsets.only(bottom: 2),
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(color: Theme.of(context).primaryColor.withAlpha(30)),
+    ),
+    child: Material(
+      color: Theme.of(context).cardColor,
+      borderRadius: BorderRadius.circular(20),
+      clipBehavior: Clip.antiAlias, // Ensures the ripple stays inside the corners
+      child: child,
+    ),
   );
 
   Widget _colorPalette(String name, List<Color> shades) {
