@@ -1,15 +1,16 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'log_service.dart';
+import '../app_config.dart';
 
 class ConfigService {
   
   static List<String> downloadPaths = [
-    "https://pastpapers.papacambridge.com/directories/CAIE/CAIE-pastpapers/upload/"
+    AppConfig.pastpaperdatabaseurl
   ];
 
   // Added static variable for TimeTable.db dynamic download URL
-  static String timeTableUrl = "https://abdozebzeb.github.io/CIE-Dates-Data/TimeTable.db";
+  static String timeTableUrl = AppConfig.timeTableUrl;
 
   static Future<void> fetchRemoteConfig() async {
     try {
