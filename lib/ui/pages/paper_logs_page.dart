@@ -5,6 +5,11 @@ import '../../logic/log_model.dart';
 import '../../services/log_service.dart';
 import '../../services/paper_data_service.dart';
 import '../../services/grade_aesthetic_service.dart';
+import 'dart:io';
+import 'package:path/path.dart' as p;
+import 'package:provider/provider.dart';
+import '../../logic/reader_controller.dart';
+import '../../services/folder_service.dart';
 
 class PaperLogsPage extends StatefulWidget {
   const PaperLogsPage({super.key});
@@ -39,7 +44,7 @@ class _PaperLogsPageState extends State<PaperLogsPage> {
   void _onSearchChanged() {
     setState(() {
       _filteredLogs = _allLogs.where((log) => 
-        log.code.toLowerCase().contains(_searchController.text.toLowerCase()) || 
+            log.code.toLowerCase().contains(_searchController.text.toLowerCase()) ||
         log.codeName.toLowerCase().contains(_searchController.text.toLowerCase())).toList();
     });
   }
@@ -349,7 +354,31 @@ class _PaperLogsPageState extends State<PaperLogsPage> {
       child: Builder(
         builder: (headerContext) => InkWell(
           borderRadius: BorderRadius.circular(10),
-          onTap: () async { /* ... same filter logic ... */ },
+          onTap: () async {
+            if (type == 'date') {
+               final d = await _pickDate(context, DateTime.now());
+               if (d != null) {
+                 setState(() {
+                   String target = DateFormat('dd MMMM yyyy').format(d);
+                   _filteredLogs = _allLogs.where((l) => l.dateCompleted == target).toList();
+                 });
+               }
+            } else if (type != 'none') {
+               final RenderBox button = headerContext.findRenderObject() as RenderBox;
+               final RenderBox overlay = Navigator.of(context).overlay!.context.findRenderObject() as RenderBox;
+               final RelativeRect position = RelativeRect.fromRect(
+                 Rect.fromPoints(button.localToGlobal(Offset(0, button.size.height), ancestor: overlay), button.localToGlobal(button.size.bottomRight(Offset.zero), ancestor: overlay)),
+                 Offset.zero & overlay.size,
+               );
+               await showMenu(
+                 context: context, position: position, color: Theme.of(context).cardColor,
+                 constraints: const BoxConstraints(minWidth: 150),
+                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15), side: BorderSide(color: Theme.of(context).primaryColor.withOpacity(0.2))),
+                 items: _getFilterItems(type),
+               );
+            }
+          },
+
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 2),
             child: Row(
@@ -380,7 +409,7 @@ class _PaperLogsPageState extends State<PaperLogsPage> {
         PopupMenuItem(child: const Text("Low to High"), onTap: () => setState(() => _filteredLogs.sort((a, b) => a.rawMarks.compareTo(b.rawMarks)))),
       ];
     }
-    List<String> options = type == 'grade' ? ['A*', 'A', 'B', 'C', 'D', 'E', 'U'] : _allLogs.map((e) => e.code.split('/')[0]).toSet().toList();
+    List<String> options = type == 'grade' ? ['A', 'B', 'C', 'D', 'E', 'U'] : _allLogs.map((e) => e.code.split('/')[0]).toSet().toList();
     return options.map((o) => PopupMenuItem(
       onTap: () => setState(() => _filteredLogs = _allLogs.where((l) => type == 'grade' ? l.grade == o : l.code.startsWith(o)).toList()),
       child: Text(o),
@@ -412,7 +441,77 @@ class _PaperLogsPageState extends State<PaperLogsPage> {
             ],
             Expanded(flex: 3, child: Text(log.dateCompleted, style: const TextStyle(fontSize: 11), overflow: TextOverflow.ellipsis)),
             Expanded(flex: 2, child: Text(log.code, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12), overflow: TextOverflow.ellipsis)),
-            Expanded(flex: 3, child: Text(log.codeName, style: const TextStyle(color: Colors.grey, fontSize: 11), overflow: TextOverflow.ellipsis)),
+            
+            // --- UPDATED CODENAME SECTION ---
+            // --- UPDATED SUBTLE BUTTON FOR CODENAME ---
+            Expanded(
+              flex: 3,
+              child: Align(
+                alignment: Alignment.centerLeft, // Keeps the button from stretching too wide
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(8),
+                  onTap: _selectionMode ? null : () async {
+                    final libPath = await FolderService.getPastPapersPath();
+                    final fileName = "${log.codeName}.pdf";
+                    final fullPath = p.join(libPath, fileName);
+
+                    if (File(fullPath).existsSync()) {
+                      if (context.mounted) {
+                        Provider.of<ReaderController>(context, listen: false)
+                            .openFile(fileName, fullPath);
+                      }
+                    } else {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("File not found in local library."))
+                        );
+                      }
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      // Subtle background tint using primary color
+                      color: _selectionMode 
+                          ? Colors.transparent 
+                          : Theme.of(context).primaryColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      // Very faint border to give it a "button" structure
+                      border: Border.all(
+                        color: _selectionMode 
+                            ? Colors.grey.withOpacity(0.2) 
+                            : Theme.of(context).primaryColor.withOpacity(0.2),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.picture_as_pdf_outlined, 
+                          size: 12, 
+                          color: _selectionMode ? Colors.grey : Theme.of(context).primaryColor 
+                        ),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            log.codeName,
+                            style: TextStyle(
+                              color: _selectionMode ? Colors.grey : Theme.of(context).primaryColor,
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w600, // Semi-bold for legibility
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            // ------------------------------------------
+            // --------------------------------
+
             Expanded(flex: 2, child: Text(log.duration, style: const TextStyle(color: Colors.grey, fontSize: 11), overflow: TextOverflow.ellipsis)),
             Expanded(flex: 2, child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft, child: Text("${log.scoredMarks} / ${log.rawMarks}", style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold)))),
             Expanded(
