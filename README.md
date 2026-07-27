@@ -4,6 +4,12 @@ A clean, fast, and actually usable desktop application for browsing, downloading
 
 ---
 
+## Download
+
+* **Microsoft Store:** [Get it from the Microsoft Store](https://apps.microsoft.com/store/detail/9NGKC89464X7?cid=DevShareMCLPCB)
+* **Winget Command:**
+  ```cmd
+  winget install 9NGKC89464X7 --source msstore
 ## About
 
 CIE Past Paper Manager was built to save students time by eliminating the need to download past papers manually from websites filled with annoying ads and pop-ups. The app features a built-in downloader that can download all the required past papers with just a few clicks.
